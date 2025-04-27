@@ -7,7 +7,13 @@ import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import * as path from 'path';
+import { createDashboard } from './dashboard';
+
+export interface LkmlAssistantStackProps extends cdk.StackProps {
+  environment?: string;
+}
 
 export class LkmlAssistantStack extends cdk.Stack {
   // Make tables public so they can be accessed by other constructs
@@ -15,17 +21,32 @@ export class LkmlAssistantStack extends cdk.Stack {
   public readonly discussionsTable: dynamodb.Table;
   public readonly fetchPatchesLambda: lambda.Function;
   public readonly fetchDiscussionsLambda: lambda.Function;
+  
+  // Environment configuration
+  private readonly environment: string;
+  private readonly isProd: boolean;
 
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props?: LkmlAssistantStackProps) {
     super(scope, id, props);
+    
+    // Set environment (default to dev)
+    this.environment = props?.environment || 'dev';
+    this.isProd = this.environment === 'prod';
+    
+    // Add environment tag to all resources
+    cdk.Tags.of(this).add('Environment', this.environment);
+    cdk.Tags.of(this).add('Project', 'LkmlAssistant');
 
-    // Define DynamoDB tables
+    // Define DynamoDB tables with environment-specific settings
     this.patchesTable = new dynamodb.Table(this, 'PatchesTable', {
-      tableName: 'LkmlAssistant-Patches',
+      tableName: `LkmlAssistant-Patches-${this.environment}`,
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy: cdk.RemovalPolicy.DESTROY, // NOT recommended for production
+      billingMode: this.isProd ? dynamodb.BillingMode.PROVISIONED : dynamodb.BillingMode.PAY_PER_REQUEST,
+      readCapacity: this.isProd ? 5 : undefined,
+      writeCapacity: this.isProd ? 5 : undefined,
+      removalPolicy: this.isProd ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
       pointInTimeRecovery: true,
+      timeToLiveAttribute: 'ttl',
     });
 
     // Add GSIs for Patches table
@@ -51,12 +72,15 @@ export class LkmlAssistantStack extends cdk.Stack {
     });
 
     this.discussionsTable = new dynamodb.Table(this, 'DiscussionsTable', {
-      tableName: 'LkmlAssistant-Discussions',
+      tableName: `LkmlAssistant-Discussions-${this.environment}`,
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'timestamp', type: dynamodb.AttributeType.STRING },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy: cdk.RemovalPolicy.DESTROY, // NOT recommended for production
+      billingMode: this.isProd ? dynamodb.BillingMode.PROVISIONED : dynamodb.BillingMode.PAY_PER_REQUEST,
+      readCapacity: this.isProd ? 5 : undefined,
+      writeCapacity: this.isProd ? 5 : undefined,
+      removalPolicy: this.isProd ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
       pointInTimeRecovery: true,
+      timeToLiveAttribute: 'ttl',
     });
 
     // Add GSIs for Discussions table
@@ -83,38 +107,80 @@ export class LkmlAssistantStack extends cdk.Stack {
 
     // Define Lambda functions
     
+    // Common Lambda configuration
+    const commonLambdaProps = {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      memorySize: this.isProd ? 1024 : 512,
+      tracing: this.isProd ? lambda.Tracing.ACTIVE : lambda.Tracing.DISABLED,
+      logRetention: this.isProd ? 
+        logs.RetentionDays.ONE_MONTH : 
+        logs.RetentionDays.ONE_WEEK,
+    };
+    
+    // Environment variables for metrics
+    const commonEnvVars = {
+      ENVIRONMENT: this.environment,
+      METRIC_SOURCE: 'lambda',
+      LOG_LEVEL: this.isProd ? 'INFO' : 'DEBUG',
+    };
+    
     // 1. Fetch Patches Lambda
     this.fetchPatchesLambda = new lambda.Function(this, 'FetchPatchesFunction', {
-      functionName: 'LkmlAssistant-FetchPatches',
-      runtime: lambda.Runtime.PYTHON_3_9,
+      ...commonLambdaProps,
+      functionName: `LkmlAssistant-FetchPatches-${this.environment}`,
       handler: 'index.handler',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../src/functions/fetch-patches')),
       timeout: cdk.Duration.seconds(300),
-      memorySize: 512,
       environment: {
+        ...commonEnvVars,
         PATCHES_TABLE_NAME: this.patchesTable.tableName,
-        FETCH_DISCUSSIONS_LAMBDA: 'LkmlAssistant-FetchDiscussions',
+        FETCH_DISCUSSIONS_LAMBDA: `LkmlAssistant-FetchDiscussions-${this.environment}`,
       },
     });
     
     // Grant DynamoDB permissions to FetchPatches Lambda
     this.patchesTable.grantWriteData(this.fetchPatchesLambda);
     
-    // Grant Lambda permissions to invoke other Lambdas
+    // Grant Lambda permissions to invoke other Lambdas - restrict to same environment
+    if (this.isProd) {
+      // In production, restrict to specific ARNs
+      this.fetchPatchesLambda.addToRolePolicy(new iam.PolicyStatement({
+        actions: ['lambda:InvokeFunction'],
+        resources: [`arn:aws:lambda:${this.region}:${this.account}:function:LkmlAssistant-*-${this.environment}`],
+      }));
+    } else {
+      // In dev/staging, less restrictive
+      this.fetchPatchesLambda.addToRolePolicy(new iam.PolicyStatement({
+        actions: ['lambda:InvokeFunction'],
+        resources: ['*'],
+        conditions: {
+          'StringLike': {
+            'lambda:FunctionName': `LkmlAssistant-*-${this.environment}`
+          }
+        }
+      }));
+    }
+    
+    // Add CloudWatch permissions for metrics
     this.fetchPatchesLambda.addToRolePolicy(new iam.PolicyStatement({
-      actions: ['lambda:InvokeFunction'],
-      resources: ['*'],  // In a production environment, this should be restricted to specific Lambda ARNs
+      actions: ['cloudwatch:PutMetricData'],
+      resources: ['*'],
+      conditions: {
+        'StringEquals': {
+          'cloudwatch:namespace': 'LkmlAssistant'
+        }
+      }
     }));
     
     // 2. Fetch Discussions Lambda
     this.fetchDiscussionsLambda = new lambda.Function(this, 'FetchDiscussionsFunction', {
-      functionName: 'LkmlAssistant-FetchDiscussions',
-      runtime: lambda.Runtime.PYTHON_3_9,
+      ...commonLambdaProps,
+      functionName: `LkmlAssistant-FetchDiscussions-${this.environment}`,
       handler: 'index.handler',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../src/functions/fetch-discussions')),
       timeout: cdk.Duration.seconds(300),
-      memorySize: 512,
       environment: {
+        ...commonEnvVars,
         DISCUSSIONS_TABLE_NAME: this.discussionsTable.tableName,
         PATCHES_TABLE_NAME: this.patchesTable.tableName,
       },
@@ -123,6 +189,17 @@ export class LkmlAssistantStack extends cdk.Stack {
     // Grant DynamoDB permissions to FetchDiscussions Lambda
     this.discussionsTable.grantWriteData(this.fetchDiscussionsLambda);
     this.patchesTable.grantReadWriteData(this.fetchDiscussionsLambda);
+    
+    // Add CloudWatch permissions for metrics
+    this.fetchDiscussionsLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['cloudwatch:PutMetricData'],
+      resources: ['*'],
+      conditions: {
+        'StringEquals': {
+          'cloudwatch:namespace': 'LkmlAssistant'
+        }
+      }
+    }));
     
     // Set up EventBridge scheduling and error handling
 
@@ -227,6 +304,41 @@ export class LkmlAssistantStack extends cdk.Stack {
       evaluationPeriods: 1,
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
       alarmDescription: 'Alarm if the Dead Letter Queue has any messages',
+    });
+    
+    // Create CloudWatch Dashboard
+    const dashboard = createDashboard(this, {
+      environment: this.environment,
+      lambdaFunctions: [
+        this.fetchPatchesLambda, 
+        this.fetchDiscussionsLambda,
+        refreshDiscussionsLambda
+      ],
+      dynamoTables: [
+        this.patchesTable,
+        this.discussionsTable
+      ],
+      deadLetterQueue: dlq
+    });
+    
+    // Export dashboard URL for easier access
+    new cdk.CfnOutput(this, 'DashboardUrl', {
+      value: `https://${this.region}.console.aws.amazon.com/cloudwatch/home?region=${this.region}#dashboards:name=${dashboard.dashboardName}`,
+      description: 'URL for CloudWatch Dashboard',
+      exportName: `LkmlAssistant-Dashboard-${this.environment}`,
+    });
+    
+    // Export table names
+    new cdk.CfnOutput(this, 'PatchesTableName', {
+      value: this.patchesTable.tableName,
+      description: 'Name of the patches DynamoDB table',
+      exportName: `LkmlAssistant-PatchesTable-${this.environment}`,
+    });
+    
+    new cdk.CfnOutput(this, 'DiscussionsTableName', {
+      value: this.discussionsTable.tableName,
+      description: 'Name of the discussions DynamoDB table',
+      exportName: `LkmlAssistant-DiscussionsTable-${this.environment}`,
     });
     
     // We'll add more advanced workflows in Phase 2 with Step Functions

@@ -8,8 +8,37 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
 INFRA_DIR="$PROJECT_ROOT/infra"
 
-# Default environment
+# Default environment and stack name
 ENV=${ENV:-"dev"}
+STACK_NAME="LkmlAssistantStack-${ENV}"
+
+# Define environment-specific settings
+case $ENV in
+  "dev")
+    DEPLOY_FLAGS="--require-approval never"
+    AWS_PROFILE=${AWS_PROFILE:-"default"}
+    ;;
+  "staging")
+    DEPLOY_FLAGS="--require-approval any-change"
+    AWS_PROFILE=${AWS_PROFILE:-"staging"}
+    ;;
+  "prod")
+    DEPLOY_FLAGS="--require-approval any-change"
+    AWS_PROFILE=${AWS_PROFILE:-"production"}
+    # Require approval for production
+    read -p "Are you sure you want to deploy to production? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]
+    then
+      echo "Deployment cancelled"
+      exit 1
+    fi
+    ;;
+  *)
+    echo "Unknown environment: $ENV"
+    exit 1
+    ;;
+esac
 
 # Colors
 RED='\033[0;31m'
@@ -84,19 +113,26 @@ build_code() {
 }
 
 deploy_stack() {
-  log_info "Deploying stack to $ENV environment..."
+  log_info "Deploying stack $STACK_NAME to $ENV environment..."
   
   # Deploy using CDK
   cd "$INFRA_DIR"
   
   # Bootstrap if needed
-  if [ "$ENV" == "dev" ]; then
-    log_info "Running bootstrap for development environment..."
+  log_info "Running bootstrap for $ENV environment..."
+  if [ ! -z "$AWS_PROFILE" ]; then
+    AWS_PROFILE=$AWS_PROFILE npm run bootstrap
+  else
     npm run bootstrap
   fi
   
-  # Deploy
-  npm run deploy -- --require-approval never
+  # Deploy with environment-specific parameters
+  log_info "Deploying with flags: $DEPLOY_FLAGS"
+  if [ ! -z "$AWS_PROFILE" ]; then
+    AWS_PROFILE=$AWS_PROFILE npm run deploy -- -c environment=$ENV $DEPLOY_FLAGS
+  else
+    npm run deploy -- -c environment=$ENV $DEPLOY_FLAGS
+  fi
   
   log_success "Deployment completed successfully."
 }

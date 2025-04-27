@@ -14,8 +14,9 @@ from typing import Dict, List, Any, Optional, Union
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# Initialize DynamoDB resource
-dynamodb = boto3.resource("dynamodb")
+# Initialize DynamoDB resource with region
+region = os.environ.get('AWS_DEFAULT_REGION', 'us-east-1')
+dynamodb = boto3.resource("dynamodb", region_name=region)
 
 # Initialize table references
 patches_table = dynamodb.Table(
@@ -81,7 +82,8 @@ def get_item(table_name: str, key: Dict[str, Any]) -> Dict[str, Any]:
 
     item = response.get("Item")
     if not item:
-        raise ItemNotFoundError(f"Item not found with key: {key}")
+        logger.info(f"Item not found with key: {key}")
+        return None
 
     return item
 
@@ -223,7 +225,9 @@ def transaction_write_items(transaction_items: List[Dict[str, Any]]) -> Dict[str
     """
     Write items in a transaction
     """
-    response = dynamodb.transact_write_items(TransactItems=transaction_items)
+    # Create DynamoDB client which supports transact_write_items
+    dynamodb_client = boto3.client('dynamodb', region_name=region)
+    response = dynamodb_client.transact_write_items(TransactItems=transaction_items)
     return response
 
 
@@ -232,5 +236,7 @@ def transaction_get_items(transaction_items: List[Dict[str, Any]]) -> Dict[str, 
     """
     Get items in a transaction
     """
-    response = dynamodb.transact_get_items(TransactItems=transaction_items)
+    # Create DynamoDB client which supports transact_get_items
+    dynamodb_client = boto3.client('dynamodb', region_name=region)
+    response = dynamodb_client.transact_get_items(TransactItems=transaction_items)
     return response

@@ -1,0 +1,3 @@
+"""
+Fetch patches Lambda function
+"""

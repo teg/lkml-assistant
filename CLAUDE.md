@@ -35,42 +35,30 @@ This project monitors the Rust for Linux mailing list, tracks patches/PRs, and p
 - Infrastructure as code in `infra/` directory
 
 ## Architecture
+
+For detailed architecture documentation, see [Architecture Documentation](./docs/architecture/).
+
 - **Backend**: AWS CDK (TypeScript), Python 3.9 Lambda functions, DynamoDB, EventBridge
-- **Frontend**: React.js, AWS Amplify for hosting and CI/CD
 - **Data Flow**:
   1. Lambda functions fetch data from Patchwork API and lore.kernel.org
-  2. Data is processed, correlated, and summarized
-  3. Frontend accesses data through Amplify API and API Gateway
+  2. Data is processed, correlated, and stored in DynamoDB
+  3. EventBridge schedules regular data fetching and processing
 
-## Design Patterns & Architectural Decisions
+### Core Architecture Components
 
-### Repository Pattern
-- Separation of data access logic from business logic
-- Abstraction layer (repositories) between domain models and data access
-- Repository interfaces provide clear API for data operations
-- Benefits:
-  - Improved testability through mocking
-  - Consistent data access and error handling
-  - Flexibility to change database implementation
-  - Centralized query logic
+- [Architecture Overview](./docs/architecture/overview.md): System diagrams and high-level design
+- [Backend Architecture](./docs/architecture/backend.md): Detailed AWS services and code organization
+- [Data Models](./docs/architecture/data-models.md): Domain and database models
+- [Design Patterns](./docs/architecture/design-patterns.md): Key patterns used in the application
 
-### Single-Table Design (DynamoDB)
-- All patch data in one table, all discussion data in another
-- Uses composite keys and global secondary indexes (GSIs) for access patterns
-- Key design:
-  - Primary keys for direct access
-  - GSIs with composite keys for querying relationships
-  - Convention-based keys (e.g., `TYPE#id`) for consistent patterns
+### Key Architectural Principles
 
-### Event-Driven Architecture
-- EventBridge for scheduled triggers
-- Lambda-to-Lambda chaining for data processing
-- Asynchronous data processing pipeline
-
-### Error Handling & Resilience
-- Retry mechanism with exponential backoff
-- Consistent error handling pattern using decorators
-- Detailed logging for troubleshooting
+1. **Serverless First**: Utilizing AWS managed services to minimize operational overhead
+2. **Event-Driven Design**: Using events for loose coupling between components
+3. **Repository Pattern**: Abstracting data access through clean interfaces
+4. **Single-Table Design**: Optimizing DynamoDB access patterns
+5. **Infrastructure as Code**: All infrastructure defined through AWS CDK
+6. **Comprehensive Error Handling**: Using retry mechanisms and dead letter queues
 
 ## Implementation Roadmap
 

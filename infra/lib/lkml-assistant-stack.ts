@@ -12,7 +12,7 @@ import * as path from 'path';
 import { createDashboard } from './dashboard';
 
 export interface LkmlAssistantStackProps extends cdk.StackProps {
-  environment?: string;
+  environmentName?: string;
 }
 
 export class LkmlAssistantStack extends cdk.Stack {
@@ -23,23 +23,29 @@ export class LkmlAssistantStack extends cdk.Stack {
   public readonly fetchDiscussionsLambda: lambda.Function;
   
   // Environment configuration
-  private readonly environment: string;
+  readonly environmentName: string;
   private readonly isProd: boolean;
 
   constructor(scope: Construct, id: string, props?: LkmlAssistantStackProps) {
-    super(scope, id, props);
+    // Make sure we have a valid AWS env for tests
+    const stackProps: cdk.StackProps = {
+      ...props,
+      env: props?.env || { account: '123456789012', region: 'us-east-1' }
+    };
+    
+    super(scope, id, stackProps);
     
     // Set environment (default to dev)
-    this.environment = props?.environment || 'dev';
-    this.isProd = this.environment === 'prod';
+    this.environmentName = props?.environmentName || 'dev';
+    this.isProd = this.environmentName === 'prod';
     
     // Add environment tag to all resources
-    cdk.Tags.of(this).add('Environment', this.environment);
+    cdk.Tags.of(this).add('Environment', this.environmentName);
     cdk.Tags.of(this).add('Project', 'LkmlAssistant');
 
     // Define DynamoDB tables with environment-specific settings
     this.patchesTable = new dynamodb.Table(this, 'PatchesTable', {
-      tableName: `LkmlAssistant-Patches-${this.environment}`,
+      tableName: `LkmlAssistant-Patches-${this.environmentName}`,
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
       billingMode: this.isProd ? dynamodb.BillingMode.PROVISIONED : dynamodb.BillingMode.PAY_PER_REQUEST,
       readCapacity: this.isProd ? 5 : undefined,
@@ -72,7 +78,7 @@ export class LkmlAssistantStack extends cdk.Stack {
     });
 
     this.discussionsTable = new dynamodb.Table(this, 'DiscussionsTable', {
-      tableName: `LkmlAssistant-Discussions-${this.environment}`,
+      tableName: `LkmlAssistant-Discussions-${this.environmentName}`,
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'timestamp', type: dynamodb.AttributeType.STRING },
       billingMode: this.isProd ? dynamodb.BillingMode.PROVISIONED : dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -119,7 +125,7 @@ export class LkmlAssistantStack extends cdk.Stack {
     
     // Environment variables for metrics
     const commonEnvVars = {
-      ENVIRONMENT: this.environment,
+      ENVIRONMENT: this.environmentName,
       METRIC_SOURCE: 'lambda',
       LOG_LEVEL: this.isProd ? 'INFO' : 'DEBUG',
     };
@@ -127,14 +133,14 @@ export class LkmlAssistantStack extends cdk.Stack {
     // 1. Fetch Patches Lambda
     this.fetchPatchesLambda = new lambda.Function(this, 'FetchPatchesFunction', {
       ...commonLambdaProps,
-      functionName: `LkmlAssistant-FetchPatches-${this.environment}`,
+      functionName: `LkmlAssistant-FetchPatches-${this.environmentName}`,
       handler: 'index.handler',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../src/functions/fetch-patches')),
       timeout: cdk.Duration.seconds(300),
       environment: {
         ...commonEnvVars,
         PATCHES_TABLE_NAME: this.patchesTable.tableName,
-        FETCH_DISCUSSIONS_LAMBDA: `LkmlAssistant-FetchDiscussions-${this.environment}`,
+        FETCH_DISCUSSIONS_LAMBDA: `LkmlAssistant-FetchDiscussions-${this.environmentName}`,
       },
     });
     
@@ -146,7 +152,7 @@ export class LkmlAssistantStack extends cdk.Stack {
       // In production, restrict to specific ARNs
       this.fetchPatchesLambda.addToRolePolicy(new iam.PolicyStatement({
         actions: ['lambda:InvokeFunction'],
-        resources: [`arn:aws:lambda:${this.region}:${this.account}:function:LkmlAssistant-*-${this.environment}`],
+        resources: [`arn:aws:lambda:${this.region}:${this.account}:function:LkmlAssistant-*-${this.environmentName}`],
       }));
     } else {
       // In dev/staging, less restrictive
@@ -155,7 +161,7 @@ export class LkmlAssistantStack extends cdk.Stack {
         resources: ['*'],
         conditions: {
           'StringLike': {
-            'lambda:FunctionName': `LkmlAssistant-*-${this.environment}`
+            'lambda:FunctionName': `LkmlAssistant-*-${this.environmentName}`
           }
         }
       }));
@@ -175,7 +181,7 @@ export class LkmlAssistantStack extends cdk.Stack {
     // 2. Fetch Discussions Lambda
     this.fetchDiscussionsLambda = new lambda.Function(this, 'FetchDiscussionsFunction', {
       ...commonLambdaProps,
-      functionName: `LkmlAssistant-FetchDiscussions-${this.environment}`,
+      functionName: `LkmlAssistant-FetchDiscussions-${this.environmentName}`,
       handler: 'index.handler',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../src/functions/fetch-discussions')),
       timeout: cdk.Duration.seconds(300),
@@ -221,7 +227,7 @@ export class LkmlAssistantStack extends cdk.Stack {
     fetchPatchesHourlyRule.addTarget(new targets.LambdaFunction(this.fetchPatchesLambda, {
       event: events.RuleTargetInput.fromObject({
         source: 'scheduled.hourly',
-        time: events.ScheduleExpression.field('time'),
+        time: new Date().toISOString(),
         page: 1,
         per_page: 20,
         process_all_pages: false,
@@ -243,7 +249,7 @@ export class LkmlAssistantStack extends cdk.Stack {
     fetchPatchesDailyRule.addTarget(new targets.LambdaFunction(this.fetchPatchesLambda, {
       event: events.RuleTargetInput.fromObject({
         source: 'scheduled.daily',
-        time: events.ScheduleExpression.field('time'),
+        time: new Date().toISOString(),
         page: 1,
         per_page: 100,
         process_all_pages: true,
@@ -287,7 +293,7 @@ export class LkmlAssistantStack extends cdk.Stack {
     refreshDiscussionsWeeklyRule.addTarget(new targets.LambdaFunction(refreshDiscussionsLambda, {
       event: events.RuleTargetInput.fromObject({
         source: 'scheduled.weekly',
-        time: events.ScheduleExpression.field('time'),
+        time: new Date().toISOString(),
         days_to_look_back: 30,
         limit: 200
       }),
@@ -308,7 +314,7 @@ export class LkmlAssistantStack extends cdk.Stack {
     
     // Create CloudWatch Dashboard
     const dashboard = createDashboard(this, {
-      environment: this.environment,
+      environment: this.environmentName,
       lambdaFunctions: [
         this.fetchPatchesLambda, 
         this.fetchDiscussionsLambda,
@@ -325,20 +331,20 @@ export class LkmlAssistantStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'DashboardUrl', {
       value: `https://${this.region}.console.aws.amazon.com/cloudwatch/home?region=${this.region}#dashboards:name=${dashboard.dashboardName}`,
       description: 'URL for CloudWatch Dashboard',
-      exportName: `LkmlAssistant-Dashboard-${this.environment}`,
+      exportName: `LkmlAssistant-Dashboard-${this.environmentName}`,
     });
     
     // Export table names
     new cdk.CfnOutput(this, 'PatchesTableName', {
       value: this.patchesTable.tableName,
       description: 'Name of the patches DynamoDB table',
-      exportName: `LkmlAssistant-PatchesTable-${this.environment}`,
+      exportName: `LkmlAssistant-PatchesTable-${this.environmentName}`,
     });
     
     new cdk.CfnOutput(this, 'DiscussionsTableName', {
       value: this.discussionsTable.tableName,
       description: 'Name of the discussions DynamoDB table',
-      exportName: `LkmlAssistant-DiscussionsTable-${this.environment}`,
+      exportName: `LkmlAssistant-DiscussionsTable-${this.environmentName}`,
     });
     
     // We'll add more advanced workflows in Phase 2 with Step Functions

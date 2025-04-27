@@ -26,7 +26,7 @@ class PatchworkAPIError(Exception):
     pass
 
 
-@retry_with_backoff(max_retries=5, initial_backoff=2.0)
+@retry_with_backoff
 def fetch_patches(
     page: int = 1, per_page: int = 20, order: str = "-date"
 ) -> Dict[str, Any]:
@@ -121,7 +121,7 @@ def fetch_patch_by_id(patch_id: Union[str, int]) -> Dict[str, Any]:
 
     try:
 
-        @retry_with_backoff(max_retries=3, initial_backoff=1.0)
+        @retry_with_backoff
         def _fetch():
             response = requests.get(url, timeout=10)
             response.raise_for_status()
@@ -142,7 +142,7 @@ def search_patches(query: str, page: int = 1, per_page: int = 20) -> Dict[str, A
 
     try:
 
-        @retry_with_backoff(max_retries=3, initial_backoff=1.0)
+        @retry_with_backoff
         def _search():
             response = requests.get(url, params=params, timeout=15)
             response.raise_for_status()

@@ -18,7 +18,7 @@ const stackName = `LkmlAssistantStack-${environment}`;
 // Create the stack
 new LkmlAssistantStack(app, stackName, {
   // Pass environment-specific configuration
-  environment: environment,
+  environmentName: environment,
   
   // Set AWS account and region
   env: { 

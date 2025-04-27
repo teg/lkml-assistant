@@ -9,6 +9,49 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Test (single): `make test TEST=test_name.py`
 - Format code: `make fmt`
 
+## Best Practices
+
+### Code Quality
+- Autoformat code before committing with `make fmt`
+- Run and pass all tests locally with `make test` before committing
+- Use static type checking where available
+- Follow test-driven development when appropriate
+- Keep functions small and focused on a single responsibility
+- Minimize dependencies between components
+- Document all public APIs and complex logic
+
+### Git Workflow
+- Split tasks into small, logically consistent commits
+- Each commit should focus on a specific change or feature
+- Write meaningful commit messages that explain:
+  - What was done (briefly)
+  - Why it was done (focus on this)
+- Avoid mixing unrelated changes in a single commit
+- Reference issue numbers in commit messages when applicable
+
+### Dependency Management
+- When introducing a new framework or library:
+  - Document what it is and its purpose
+  - Explain why it was chosen over alternatives
+  - Add details to relevant documentation
+- Keep dependencies up-to-date but stable
+- Pin dependency versions to ensure reproducible builds
+
+### Testing Requirements
+- All new code should include appropriate tests:
+  - Unit tests for isolated functionality
+  - Integration tests for components that interact
+- Tests must be runnable locally with `make test`
+- All tests must be integrated into GitHub Actions CI
+- Aim for good test coverage of critical paths
+
+### Code Review
+- Review for clarity, correctness, and consistency
+- Look for potential security issues
+- Verify error handling and edge cases
+- Ensure new dependencies are justified and appropriate
+- Check that tests adequately cover new functionality
+
 ## Code Style Guidelines
 - Follow Linux kernel coding style for C/C++ code
 - PEP 8 for Python code

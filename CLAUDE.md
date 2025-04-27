@@ -2,9 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
-This project monitors the Rust for Linux mailing list, tracks patches/PRs, and provides summaries of discussions and patch statuses. It uses a serverless architecture on AWS.
-
 ## Build/Lint/Test Commands
 - Build: `make build`
 - Lint: `make lint`

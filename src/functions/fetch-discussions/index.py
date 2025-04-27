@@ -7,20 +7,21 @@ import re
 import boto3
 import requests
 import logging
+import sys
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 from email.parser import Parser
 from email.policy import default
 from bs4 import BeautifulSoup
 
+# Add project root to Python path so we can import our modules
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
+from src.repositories import patch_repository, discussion_repository
+
 # Configure logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-
-# Initialize DynamoDB client
-dynamodb = boto3.resource('dynamodb')
-discussions_table = dynamodb.Table(os.environ.get('DISCUSSIONS_TABLE_NAME'))
-patches_table = dynamodb.Table(os.environ.get('PATCHES_TABLE_NAME'))
 
 # Lore.kernel.org base URL - API endpoint doesn't exist, we need to scrape
 LORE_BASE_URL = 'https://lore.kernel.org/rust-for-linux/'
@@ -200,14 +201,7 @@ def update_patch_discussion_count(patch_id: str, count: int) -> None:
     Update the discussion count for a patch
     """
     try:
-        patches_table.update_item(
-            Key={'id': patch_id},
-            UpdateExpression="SET discussionCount = :count, lastUpdatedAt = :now",
-            ExpressionAttributeValues={
-                ':count': count,
-                ':now': datetime.utcnow().isoformat()
-            }
-        )
+        patch_repository.update_discussion_count(patch_id, count)
     except Exception as e:
         logger.error(f"Error updating discussion count for patch {patch_id}: {str(e)}")
 
@@ -238,8 +232,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         for email_data in messages:
             discussion_item = create_discussion_record(email_data, patch_id)
             
-            # Store in DynamoDB
-            discussions_table.put_item(Item=discussion_item)
+            # Store in DynamoDB using the repository
+            discussion_repository.save_discussion(discussion_item)
         
         # Update the patch with the discussion count
         update_patch_discussion_count(patch_id, len(messages))

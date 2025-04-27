@@ -3,16 +3,18 @@ import os
 import boto3
 import requests
 import logging
+import sys
+
+# Add project root to Python path so we can import our modules
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
 from datetime import datetime
 from typing import Dict, List, Any, Optional
+from src.repositories import patch_repository
 
 # Configure logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-
-# Initialize DynamoDB client
-dynamodb = boto3.resource('dynamodb')
-patches_table = dynamodb.Table(os.environ.get('PATCHES_TABLE_NAME'))
 
 # Initialize Lambda client for invoking other functions
 lambda_client = boto3.client('lambda')
@@ -168,8 +170,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             patch_id = patch_item['id']
             message_id = patch_item['messageId']
             
-            # Store in DynamoDB
-            patches_table.put_item(Item=patch_item)
+            # Store in DynamoDB using the repository
+            patch_repository.save_patch(patch_item)
             logger.info(f"Stored patch {patch_id} in DynamoDB")
             
             # Trigger discussion fetch for this patch if requested

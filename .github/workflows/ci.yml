@@ -34,16 +34,17 @@ jobs:
       run: |
         cd infra
         npm install
+        npm install --save-dev eslint@8 @typescript-eslint/eslint-plugin @typescript-eslint/parser
         
     - name: Lint Python
       run: |
-        flake8 src tests --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 src tests
         black --check src tests
         
     - name: Lint TypeScript
       run: |
         cd infra
-        npm run lint
+        npx eslint . --ext .ts
   
   test:
     name: Test

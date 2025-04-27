@@ -72,59 +72,39 @@ This project monitors the Rust for Linux mailing list, tracks patches/PRs, and p
 - Consistent error handling pattern using decorators
 - Detailed logging for troubleshooting
 
-## Implementation Phases
+## Implementation Roadmap
 
-### Phase 1: Backend Infrastructure
-1. **Project Setup**
-   - Initialize AWS CDK project with TypeScript
-   - Set up project structure and directories
-   - Configure AWS credentials and profiles
+The implementation is divided into four major phases. For detailed information about each phase, please refer to the [Implementation Documentation](./docs/implementation/).
 
-2. **Define Core Data Models**
-   - Define DynamoDB table schemas:
-     - Patches Table (metadata about patches)
-     - Discussions Table (discussions related to patches)
-   - Create TypeScript interfaces for data models
+### Phase 1: Backend Infrastructure (✅ Completed)
+- Project setup and AWS CDK configuration
+- Data model and schema definition
+- Data fetching from external sources
+- Data storage and access patterns
+- Scheduled processing with EventBridge
+- Deployment pipeline and environments
+- Testing and quality assurance
 
-3. **Data Fetching Layer**
-   - Create Lambda function to fetch patches from Patchwork API
-     - Endpoint: https://patchwork.kernel.org/api/1.1/projects/rust-for-linux/patches/
-     - Handle pagination and API limits
-   - Create Lambda function to fetch discussions from lore.kernel.org
-     - Parse email threads and conversations
+### Phase 2: Data Processing (🔄 Planned)
+- Patch status tracking and updates
+- Discussion threading and correlation
+- Content summarization with NLP
+- Advanced event processing
+- Notification system
 
-4. **Data Storage Implementation**
-   - Implement DynamoDB table creation and configuration
-   - Set up partition keys and sort keys for efficient querying
-   - Create base CRUD operations for data access
+### Phase 3: Frontend (🔄 Planned)
+- AWS Amplify setup and configuration
+- React application architecture
+- User authentication and authorization
+- Dashboard views and components
+- Data visualization
 
-5. **Scheduling**
-   - Set up EventBridge rules for scheduled execution
-     - Configure hourly triggers for patch fetching
-   - Implement error handling and retry mechanisms
+### Phase 4: Integration & Deployment (🔄 Planned)
+- API Gateway configuration
+- Frontend-backend integration
+- Comprehensive CI/CD pipeline
+- Security hardening
+- Production deployment
+- Monitoring and alerting
 
-6. **Deployment Pipeline**
-   - Create CDK deployment stack
-   - Configure environment variables and secrets management
-   - Implement logging and monitoring
-
-7. **Testing**
-   - Write unit tests for Lambda functions
-   - Create integration tests for API interactions
-   - Test DynamoDB access patterns
-
-### Phase 2: Data Processing
-- Implement patch status tracking
-- Add discussion threading
-- Create summarization logic
-
-### Phase 3: Frontend
-- Set up Amplify hosting
-- Build React components
-- Implement authentication
-- Create dashboard views
-
-### Phase 4: Integration & Deployment
-- Connect frontend to backend
-- Set up CI/CD pipeline
-- Deploy to production
+For detailed implementation information, see the [full implementation docs](./docs/implementation/).

@@ -5,6 +5,8 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import * as path from 'path';
 
 export class LkmlAssistantStack extends cdk.Stack {
@@ -122,26 +124,111 @@ export class LkmlAssistantStack extends cdk.Stack {
     this.discussionsTable.grantWriteData(this.fetchDiscussionsLambda);
     this.patchesTable.grantReadWriteData(this.fetchDiscussionsLambda);
     
-    // Set up EventBridge rules for scheduling
-    
-    // Schedule FetchPatches Lambda to run hourly
-    const fetchPatchesRule = new events.Rule(this, 'FetchPatchesRule', {
+    // Set up EventBridge scheduling and error handling
+
+    // Create a Dead Letter Queue for failed Lambda executions
+    const dlq = new sqs.Queue(this, 'LambdaDeadLetterQueue', {
+      queueName: 'LkmlAssistant-DLQ',
+      retentionPeriod: cdk.Duration.days(14),
+      visibilityTimeout: cdk.Duration.minutes(5),
+    });
+
+    // 1. Schedule FetchPatches Lambda to run hourly
+    const fetchPatchesHourlyRule = new events.Rule(this, 'FetchPatchesHourlyRule', {
       ruleName: 'LkmlAssistant-FetchPatchesHourly',
       schedule: events.Schedule.rate(cdk.Duration.hours(1)),
-      description: 'Fetch patches from Patchwork API hourly',
+      description: 'Fetch recent patches from Patchwork API hourly',
+      enabled: true,
     });
     
-    fetchPatchesRule.addTarget(new targets.LambdaFunction(this.fetchPatchesLambda, {
+    fetchPatchesHourlyRule.addTarget(new targets.LambdaFunction(this.fetchPatchesLambda, {
       event: events.RuleTargetInput.fromObject({
+        source: 'scheduled.hourly',
+        time: events.ScheduleExpression.field('time'),
         page: 1,
-        per_page: 50,
-        process_all_pages: true
-      })
+        per_page: 20,
+        process_all_pages: false,
+        fetch_discussions: true
+      }),
+      deadLetterQueue: dlq,
+      maxEventAge: cdk.Duration.hours(2),
+      retryAttempts: 2,
+    }));
+
+    // 2. Schedule daily full refresh at a low-traffic time (3 AM UTC)
+    const fetchPatchesDailyRule = new events.Rule(this, 'FetchPatchesDailyRule', {
+      ruleName: 'LkmlAssistant-FetchPatchesDaily',
+      schedule: events.Schedule.cron({ hour: '3', minute: '0' }),
+      description: 'Full refresh of patches from Patchwork API daily',
+      enabled: true,
+    });
+    
+    fetchPatchesDailyRule.addTarget(new targets.LambdaFunction(this.fetchPatchesLambda, {
+      event: events.RuleTargetInput.fromObject({
+        source: 'scheduled.daily',
+        time: events.ScheduleExpression.field('time'),
+        page: 1,
+        per_page: 100,
+        process_all_pages: true,
+        fetch_discussions: true
+      }),
+      deadLetterQueue: dlq,
+      maxEventAge: cdk.Duration.hours(6),
+      retryAttempts: 3,
+    }));
+
+    // 3. Schedule weekly discussion refresh to update any missing discussions
+    const refreshDiscussionsWeeklyRule = new events.Rule(this, 'RefreshDiscussionsWeeklyRule', {
+      ruleName: 'LkmlAssistant-RefreshDiscussionsWeekly',
+      schedule: events.Schedule.cron({ day: 'SUN', hour: '4', minute: '30' }),
+      description: 'Refresh all discussions weekly to catch any missed updates',
+      enabled: true,
+    });
+    
+    // Create a Lambda function to refresh discussions for recent patches
+    const refreshDiscussionsLambda = new lambda.Function(this, 'RefreshDiscussionsFunction', {
+      functionName: 'LkmlAssistant-RefreshDiscussions',
+      runtime: lambda.Runtime.PYTHON_3_9,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../src/functions/refresh-discussions')),
+      timeout: cdk.Duration.minutes(10),
+      memorySize: 512,
+      environment: {
+        PATCHES_TABLE_NAME: this.patchesTable.tableName,
+        DISCUSSIONS_TABLE_NAME: this.discussionsTable.tableName,
+        FETCH_DISCUSSIONS_LAMBDA: this.fetchDiscussionsLambda.functionName,
+      },
+    });
+    
+    // Grant permissions
+    this.patchesTable.grantReadData(refreshDiscussionsLambda);
+    refreshDiscussionsLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['lambda:InvokeFunction'],
+      resources: [this.fetchDiscussionsLambda.functionArn],
     }));
     
-    // Note: FetchDiscussions Lambda will be triggered by the FetchPatches Lambda
-    // for each patch, so we don't need to schedule it directly.
+    refreshDiscussionsWeeklyRule.addTarget(new targets.LambdaFunction(refreshDiscussionsLambda, {
+      event: events.RuleTargetInput.fromObject({
+        source: 'scheduled.weekly',
+        time: events.ScheduleExpression.field('time'),
+        days_to_look_back: 30,
+        limit: 200
+      }),
+      deadLetterQueue: dlq,
+      maxEventAge: cdk.Duration.hours(12),
+      retryAttempts: 2,
+    }));
     
-    // We'll add step functions or direct invocation in Phase 2
+    // Create CloudWatch alarms for the DLQ to monitor failures
+    const dlqAlarm = new cloudwatch.Alarm(this, 'DLQAlarm', {
+      alarmName: 'LkmlAssistant-DLQ-NotEmpty',
+      metric: dlq.metricApproximateNumberOfMessagesVisible(),
+      threshold: 1,
+      evaluationPeriods: 1,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      alarmDescription: 'Alarm if the Dead Letter Queue has any messages',
+    });
+    
+    // We'll add more advanced workflows in Phase 2 with Step Functions
   }
 }

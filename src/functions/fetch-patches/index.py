@@ -1,7 +1,6 @@
 import json
 import os
 import boto3
-import requests
 import logging
 import sys
 
@@ -11,6 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 from src.repositories import patch_repository
+from src.utils import patchwork_api
 
 # Configure logging
 logger = logging.getLogger()
@@ -18,9 +18,6 @@ logger.setLevel(logging.INFO)
 
 # Initialize Lambda client for invoking other functions
 lambda_client = boto3.client('lambda')
-
-# Patchwork API endpoint
-PATCHWORK_API_URL = 'https://patchwork.kernel.org/api/1.1/projects/rust-for-linux/patches/'
 
 # Name of the fetch discussions Lambda function
 FETCH_DISCUSSIONS_LAMBDA = os.environ.get('FETCH_DISCUSSIONS_LAMBDA', 'LkmlAssistant-FetchDiscussions')
@@ -102,21 +99,15 @@ def create_patch_record(patch_data: Dict[str, Any]) -> Dict[str, Any]:
 
 def get_patches(page: int = 1, per_page: int = 20) -> List[Dict[str, Any]]:
     """
-    Get patches from Patchwork API with pagination
+    Get patches from Patchwork API with pagination and retry
     """
-    response = requests.get(
-        PATCHWORK_API_URL, 
-        params={
-            'page': page, 
-            'per_page': per_page,
-            'order': '-date'  # Get newest patches first
-        }
-    )
-    response.raise_for_status()
-    
-    # Extract results from API response
-    data = response.json()
-    return data.get('results', [])
+    try:
+        # Use the patchwork_api module which handles retries
+        data = patchwork_api.fetch_patches(page=page, per_page=per_page, order='-date')
+        return data.get('results', [])
+    except patchwork_api.PatchworkAPIError as e:
+        logger.error(f"Error fetching patches: {str(e)}")
+        return []
 
 def trigger_discussions_fetch(patch_id: str, message_id: str) -> None:
     """

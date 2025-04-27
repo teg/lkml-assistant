@@ -42,6 +42,36 @@ This project monitors the Rust for Linux mailing list, tracks patches/PRs, and p
   2. Data is processed, correlated, and summarized
   3. Frontend accesses data through Amplify API and API Gateway
 
+## Design Patterns & Architectural Decisions
+
+### Repository Pattern
+- Separation of data access logic from business logic
+- Abstraction layer (repositories) between domain models and data access
+- Repository interfaces provide clear API for data operations
+- Benefits:
+  - Improved testability through mocking
+  - Consistent data access and error handling
+  - Flexibility to change database implementation
+  - Centralized query logic
+
+### Single-Table Design (DynamoDB)
+- All patch data in one table, all discussion data in another
+- Uses composite keys and global secondary indexes (GSIs) for access patterns
+- Key design:
+  - Primary keys for direct access
+  - GSIs with composite keys for querying relationships
+  - Convention-based keys (e.g., `TYPE#id`) for consistent patterns
+
+### Event-Driven Architecture
+- EventBridge for scheduled triggers
+- Lambda-to-Lambda chaining for data processing
+- Asynchronous data processing pipeline
+
+### Error Handling & Resilience
+- Retry mechanism with exponential backoff
+- Consistent error handling pattern using decorators
+- Detailed logging for troubleshooting
+
 ## Implementation Phases
 
 ### Phase 1: Backend Infrastructure

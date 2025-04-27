@@ -122,9 +122,11 @@ deploy_stack() {
   
   # Bootstrap if needed
   log_info "Running bootstrap for $ENV environment..."
-  if [[ -n "$CI" ]]; then
-    # In CI environment, AWS credentials are set up by GitHub Actions
-    npm run bootstrap
+  # Use global CDK in CI environment if available, otherwise use local version
+  if [[ -n "$CI" && -x "$(command -v cdk)" ]]; then
+    # In CI environment with global CDK, use it directly
+    log_info "Using global CDK for bootstrap"
+    cdk bootstrap
   elif [ ! -z "$AWS_PROFILE" ]; then
     AWS_PROFILE=$AWS_PROFILE npm run bootstrap
   else
@@ -133,9 +135,10 @@ deploy_stack() {
   
   # Deploy with environment-specific parameters
   log_info "Deploying with flags: $DEPLOY_FLAGS"
-  if [[ -n "$CI" ]]; then
-    # In CI environment, AWS credentials are set up by GitHub Actions
-    npm run deploy -- -c environment=$ENV $DEPLOY_FLAGS
+  if [[ -n "$CI" && -x "$(command -v cdk)" ]]; then
+    # In CI environment with global CDK, use it directly
+    log_info "Using global CDK for deployment"
+    cdk deploy -c environment=$ENV $DEPLOY_FLAGS
   elif [ ! -z "$AWS_PROFILE" ]; then
     AWS_PROFILE=$AWS_PROFILE npm run deploy -- -c environment=$ENV $DEPLOY_FLAGS
   else

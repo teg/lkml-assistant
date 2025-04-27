@@ -13,7 +13,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # Initialize CloudWatch client with region
-region = os.environ.get('AWS_DEFAULT_REGION', 'us-east-1')
+region = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
 cloudwatch = boto3.client("cloudwatch", region_name=region)
 
 # Default namespace for all metrics

@@ -15,7 +15,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # Initialize DynamoDB resource with region
-region = os.environ.get('AWS_DEFAULT_REGION', 'us-east-1')
+region = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
 dynamodb = boto3.resource("dynamodb", region_name=region)
 
 # Initialize table references
@@ -226,7 +226,7 @@ def transaction_write_items(transaction_items: List[Dict[str, Any]]) -> Dict[str
     Write items in a transaction
     """
     # Create DynamoDB client which supports transact_write_items
-    dynamodb_client = boto3.client('dynamodb', region_name=region)
+    dynamodb_client = boto3.client("dynamodb", region_name=region)
     response = dynamodb_client.transact_write_items(TransactItems=transaction_items)
     return response
 
@@ -237,6 +237,6 @@ def transaction_get_items(transaction_items: List[Dict[str, Any]]) -> Dict[str, 
     Get items in a transaction
     """
     # Create DynamoDB client which supports transact_get_items
-    dynamodb_client = boto3.client('dynamodb', region_name=region)
+    dynamodb_client = boto3.client("dynamodb", region_name=region)
     response = dynamodb_client.transact_get_items(TransactItems=transaction_items)
     return response

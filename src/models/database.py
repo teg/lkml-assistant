@@ -10,6 +10,7 @@ from datetime import datetime
 @dataclass
 class PatchDbRecord:
     """Represents a patch record in DynamoDB"""
+
     pk: str  # Primary key - format: PATCH#{id}
     sk: str  # Sort key - format: #METADATA
     id: str  # Patch ID
@@ -39,6 +40,7 @@ class PatchDbRecord:
 @dataclass
 class DiscussionDbRecord:
     """Represents a discussion record in DynamoDB"""
+
     pk: str  # Primary key - format: PATCH#{patchId}
     sk: str  # Sort key - format: DISCUSSION#{id}
     id: str  # Discussion ID

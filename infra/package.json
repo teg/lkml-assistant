@@ -1,0 +1,31 @@
+{
+  "name": "infra",
+  "version": "1.0.0",
+  "description": "Infrastructure for LKML Assistant",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk",
+    "deploy": "cdk deploy",
+    "synth": "cdk synth",
+    "diff": "cdk diff",
+    "bootstrap": "cdk bootstrap"
+  },
+  "keywords": ["lkml", "linux", "kernel", "rust", "aws", "cdk"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "aws-cdk": "^2.1012.0",
+    "aws-cdk-lib": "^2.192.0",
+    "constructs": "^10.4.2",
+    "source-map-support": "^0.5.21"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

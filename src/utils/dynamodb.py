@@ -1,6 +1,7 @@
 """
 DynamoDB utility functions for data access
 """
+
 import os
 import json
 import logging
@@ -14,48 +15,61 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # Initialize DynamoDB resource
-dynamodb = boto3.resource('dynamodb')
+dynamodb = boto3.resource("dynamodb")
 
 # Initialize table references
-patches_table = dynamodb.Table(os.environ.get('PATCHES_TABLE_NAME', 'LkmlAssistant-Patches'))
-discussions_table = dynamodb.Table(os.environ.get('DISCUSSIONS_TABLE_NAME', 'LkmlAssistant-Discussions'))
+patches_table = dynamodb.Table(
+    os.environ.get("PATCHES_TABLE_NAME", "LkmlAssistant-Patches")
+)
+discussions_table = dynamodb.Table(
+    os.environ.get("DISCUSSIONS_TABLE_NAME", "LkmlAssistant-Discussions")
+)
+
 
 class DatabaseError(Exception):
     """Base exception for database errors"""
+
     pass
+
 
 class ItemNotFoundError(DatabaseError):
     """Exception raised when an item is not found"""
+
     pass
+
 
 class QueryError(DatabaseError):
     """Exception raised when a query fails"""
+
     pass
+
 
 def handle_db_error(func):
     """
     Decorator to handle common DynamoDB errors
     """
+
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code')
-            error_message = e.response.get('Error', {}).get('Message')
-            
+            error_code = e.response.get("Error", {}).get("Code")
+            error_message = e.response.get("Error", {}).get("Message")
+
             logger.error(f"DynamoDB error: {error_code} - {error_message}")
-            
-            if error_code == 'ResourceNotFoundException':
+
+            if error_code == "ResourceNotFoundException":
                 raise ItemNotFoundError(f"Item not found: {error_message}")
-            elif error_code == 'ConditionalCheckFailedException':
+            elif error_code == "ConditionalCheckFailedException":
                 raise DatabaseError(f"Condition check failed: {error_message}")
             else:
                 raise DatabaseError(f"Database error: {error_message}")
         except Exception as e:
             logger.error(f"Unexpected error: {str(e)}")
             raise DatabaseError(f"Unexpected database error: {str(e)}")
-    
+
     return wrapper
+
 
 @handle_db_error
 def get_item(table_name: str, key: Dict[str, Any]) -> Dict[str, Any]:
@@ -64,26 +78,30 @@ def get_item(table_name: str, key: Dict[str, Any]) -> Dict[str, Any]:
     """
     table = dynamodb.Table(table_name)
     response = table.get_item(Key=key)
-    
-    item = response.get('Item')
+
+    item = response.get("Item")
     if not item:
         raise ItemNotFoundError(f"Item not found with key: {key}")
-    
+
     return item
 
+
 @handle_db_error
-def put_item(table_name: str, item: Dict[str, Any], condition_expression: Optional[str] = None) -> Dict[str, Any]:
+def put_item(
+    table_name: str, item: Dict[str, Any], condition_expression: Optional[str] = None
+) -> Dict[str, Any]:
     """
     Put an item into DynamoDB with optional condition expression
     """
     table = dynamodb.Table(table_name)
-    
-    params = {'Item': item}
+
+    params = {"Item": item}
     if condition_expression:
-        params['ConditionExpression'] = condition_expression
-    
+        params["ConditionExpression"] = condition_expression
+
     response = table.put_item(**params)
     return response
+
 
 @handle_db_error
 def update_item(
@@ -93,42 +111,46 @@ def update_item(
     expression_attribute_values: Dict[str, Any],
     condition_expression: Optional[str] = None,
     expression_attribute_names: Optional[Dict[str, str]] = None,
-    return_values: str = 'UPDATED_NEW'
+    return_values: str = "UPDATED_NEW",
 ) -> Dict[str, Any]:
     """
     Update an item in DynamoDB
     """
     table = dynamodb.Table(table_name)
-    
+
     params = {
-        'Key': key,
-        'UpdateExpression': update_expression,
-        'ExpressionAttributeValues': expression_attribute_values,
-        'ReturnValues': return_values
+        "Key": key,
+        "UpdateExpression": update_expression,
+        "ExpressionAttributeValues": expression_attribute_values,
+        "ReturnValues": return_values,
     }
-    
+
     if condition_expression:
-        params['ConditionExpression'] = condition_expression
-        
+        params["ConditionExpression"] = condition_expression
+
     if expression_attribute_names:
-        params['ExpressionAttributeNames'] = expression_attribute_names
-    
+        params["ExpressionAttributeNames"] = expression_attribute_names
+
     response = table.update_item(**params)
     return response
 
+
 @handle_db_error
-def delete_item(table_name: str, key: Dict[str, Any], condition_expression: Optional[str] = None) -> Dict[str, Any]:
+def delete_item(
+    table_name: str, key: Dict[str, Any], condition_expression: Optional[str] = None
+) -> Dict[str, Any]:
     """
     Delete an item from DynamoDB
     """
     table = dynamodb.Table(table_name)
-    
-    params = {'Key': key}
+
+    params = {"Key": key}
     if condition_expression:
-        params['ConditionExpression'] = condition_expression
-    
+        params["ConditionExpression"] = condition_expression
+
     response = table.delete_item(**params)
     return response
+
 
 @handle_db_error
 def query_items(
@@ -141,41 +163,42 @@ def query_items(
     exclusive_start_key: Optional[Dict[str, Any]] = None,
     projection_expression: Optional[str] = None,
     expression_attribute_names: Optional[Dict[str, str]] = None,
-    expression_attribute_values: Optional[Dict[str, Any]] = None
+    expression_attribute_values: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Query items from DynamoDB
     """
     table = dynamodb.Table(table_name)
-    
+
     params = {
-        'KeyConditionExpression': key_condition_expression,
-        'ScanIndexForward': scan_index_forward
+        "KeyConditionExpression": key_condition_expression,
+        "ScanIndexForward": scan_index_forward,
     }
-    
+
     if index_name:
-        params['IndexName'] = index_name
-        
+        params["IndexName"] = index_name
+
     if filter_expression:
-        params['FilterExpression'] = filter_expression
-        
+        params["FilterExpression"] = filter_expression
+
     if limit is not None:
-        params['Limit'] = limit
-        
+        params["Limit"] = limit
+
     if exclusive_start_key:
-        params['ExclusiveStartKey'] = exclusive_start_key
-        
+        params["ExclusiveStartKey"] = exclusive_start_key
+
     if projection_expression:
-        params['ProjectionExpression'] = projection_expression
-        
+        params["ProjectionExpression"] = projection_expression
+
     if expression_attribute_names:
-        params['ExpressionAttributeNames'] = expression_attribute_names
-        
+        params["ExpressionAttributeNames"] = expression_attribute_names
+
     if expression_attribute_values:
-        params['ExpressionAttributeValues'] = expression_attribute_values
-    
+        params["ExpressionAttributeValues"] = expression_attribute_values
+
     response = table.query(**params)
     return response
+
 
 @handle_db_error
 def batch_get_items(request_items: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
@@ -185,6 +208,7 @@ def batch_get_items(request_items: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
     response = dynamodb.batch_get_item(RequestItems=request_items)
     return response
 
+
 @handle_db_error
 def batch_write_items(request_items: Dict[str, List[Dict[str, Any]]]) -> Dict[str, Any]:
     """
@@ -193,6 +217,7 @@ def batch_write_items(request_items: Dict[str, List[Dict[str, Any]]]) -> Dict[st
     response = dynamodb.batch_write_item(RequestItems=request_items)
     return response
 
+
 @handle_db_error
 def transaction_write_items(transaction_items: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
@@ -200,6 +225,7 @@ def transaction_write_items(transaction_items: List[Dict[str, Any]]) -> Dict[str
     """
     response = dynamodb.transact_write_items(TransactItems=transaction_items)
     return response
+
 
 @handle_db_error
 def transaction_get_items(transaction_items: List[Dict[str, Any]]) -> Dict[str, Any]:

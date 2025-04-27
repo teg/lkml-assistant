@@ -297,7 +297,7 @@ export class LkmlAssistantStack extends cdk.Stack {
     }));
     
     // Create CloudWatch alarms for the DLQ to monitor failures
-    const dlqAlarm = new cloudwatch.Alarm(this, 'DLQAlarm', {
+    new cloudwatch.Alarm(this, 'DLQAlarm', {
       alarmName: 'LkmlAssistant-DLQ-NotEmpty',
       metric: dlq.metricApproximateNumberOfMessagesVisible(),
       threshold: 1,

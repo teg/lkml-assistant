@@ -25,13 +25,15 @@ case $ENV in
   "prod")
     DEPLOY_FLAGS="--require-approval any-change"
     AWS_PROFILE=${AWS_PROFILE:-"production"}
-    # Require approval for production
-    read -p "Are you sure you want to deploy to production? (y/n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]
-    then
-      echo "Deployment cancelled"
-      exit 1
+    # Require approval for production (skip prompt in CI environment)
+    if [[ -z "$CI" ]]; then
+      read -p "Are you sure you want to deploy to production? (y/n) " -n 1 -r
+      echo
+      if [[ ! $REPLY =~ ^[Yy]$ ]]
+      then
+        echo "Deployment cancelled"
+        exit 1
+      fi
     fi
     ;;
   *)
@@ -120,7 +122,10 @@ deploy_stack() {
   
   # Bootstrap if needed
   log_info "Running bootstrap for $ENV environment..."
-  if [ ! -z "$AWS_PROFILE" ]; then
+  if [[ -n "$CI" ]]; then
+    # In CI environment, AWS credentials are set up by GitHub Actions
+    npm run bootstrap
+  elif [ ! -z "$AWS_PROFILE" ]; then
     AWS_PROFILE=$AWS_PROFILE npm run bootstrap
   else
     npm run bootstrap
@@ -128,7 +133,10 @@ deploy_stack() {
   
   # Deploy with environment-specific parameters
   log_info "Deploying with flags: $DEPLOY_FLAGS"
-  if [ ! -z "$AWS_PROFILE" ]; then
+  if [[ -n "$CI" ]]; then
+    # In CI environment, AWS credentials are set up by GitHub Actions
+    npm run deploy -- -c environment=$ENV $DEPLOY_FLAGS
+  elif [ ! -z "$AWS_PROFILE" ]; then
     AWS_PROFILE=$AWS_PROFILE npm run deploy -- -c environment=$ENV $DEPLOY_FLAGS
   else
     npm run deploy -- -c environment=$ENV $DEPLOY_FLAGS

@@ -2,15 +2,26 @@ import json
 import os
 import boto3
 import requests
+import logging
 from datetime import datetime
 from typing import Dict, List, Any, Optional
+
+# Configure logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 # Initialize DynamoDB client
 dynamodb = boto3.resource('dynamodb')
 patches_table = dynamodb.Table(os.environ.get('PATCHES_TABLE_NAME'))
 
+# Initialize Lambda client for invoking other functions
+lambda_client = boto3.client('lambda')
+
 # Patchwork API endpoint
 PATCHWORK_API_URL = 'https://patchwork.kernel.org/api/1.1/projects/rust-for-linux/patches/'
+
+# Name of the fetch discussions Lambda function
+FETCH_DISCUSSIONS_LAMBDA = os.environ.get('FETCH_DISCUSSIONS_LAMBDA', 'LkmlAssistant-FetchDiscussions')
 
 def create_patch_record(patch_data: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -105,33 +116,87 @@ def get_patches(page: int = 1, per_page: int = 20) -> List[Dict[str, Any]]:
     data = response.json()
     return data.get('results', [])
 
+def trigger_discussions_fetch(patch_id: str, message_id: str) -> None:
+    """
+    Trigger the fetch-discussions Lambda for a patch
+    """
+    if not message_id:
+        logger.warning(f"No message ID for patch {patch_id}, skipping discussion fetch")
+        return
+    
+    try:
+        payload = {
+            'patch_id': patch_id,
+            'message_id': message_id
+        }
+        
+        # Invoke the fetch-discussions Lambda asynchronously
+        response = lambda_client.invoke(
+            FunctionName=FETCH_DISCUSSIONS_LAMBDA,
+            InvocationType='Event',  # Asynchronous
+            Payload=json.dumps(payload)
+        )
+        
+        status_code = response.get('StatusCode')
+        if status_code == 202:  # 202 Accepted
+            logger.info(f"Successfully triggered discussion fetch for patch {patch_id}")
+        else:
+            logger.warning(f"Unexpected status code {status_code} when triggering discussion fetch for patch {patch_id}")
+            
+    except Exception as e:
+        logger.error(f"Error triggering discussion fetch for patch {patch_id}: {str(e)}")
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
     Lambda function to fetch patches from Patchwork API and store in DynamoDB
     """
     try:
-        print(f"Starting fetch patches lambda at {datetime.utcnow().isoformat()}")
+        logger.info(f"Starting fetch patches lambda at {datetime.utcnow().isoformat()}")
         
         # Get configuration from event or use defaults
         page = event.get('page', 1)
         per_page = event.get('per_page', 20)
+        fetch_discussions = event.get('fetch_discussions', True)
         
         # Get patches from Patchwork
         patches = get_patches(page, per_page)
-        print(f"Retrieved {len(patches)} patches from Patchwork API")
+        logger.info(f"Retrieved {len(patches)} patches from Patchwork API")
         
         # Process and store patches
         for patch in patches:
             patch_item = create_patch_record(patch)
+            patch_id = patch_item['id']
+            message_id = patch_item['messageId']
             
             # Store in DynamoDB
             patches_table.put_item(Item=patch_item)
+            logger.info(f"Stored patch {patch_id} in DynamoDB")
+            
+            # Trigger discussion fetch for this patch if requested
+            if fetch_discussions and message_id:
+                trigger_discussions_fetch(patch_id, message_id)
         
         # Check if we need to process more pages
         if len(patches) == per_page and event.get('process_all_pages', False):
-            # Schedule another invocation for the next page
-            # This would typically be done with Step Functions or EventBridge
-            print(f"Scheduling processing for page {page + 1}")
+            # For now, just log that we should process more pages
+            # In a more complete implementation, we would use Step Functions or EventBridge
+            logger.info(f"More pages available, should process page {page + 1}")
+            
+            # For demo purposes, we'll recursively invoke ourselves for the next page
+            # Note: In production, this would be better handled by Step Functions
+            if page < 5:  # Limit to 5 pages for demo
+                try:
+                    next_event = event.copy()
+                    next_event['page'] = page + 1
+                    
+                    lambda_client.invoke(
+                        FunctionName=context.function_name,
+                        InvocationType='Event',
+                        Payload=json.dumps(next_event)
+                    )
+                    logger.info(f"Scheduled processing for page {page + 1}")
+                except Exception as e:
+                    logger.error(f"Error scheduling next page: {str(e)}")
         
         return {
             'statusCode': 200,
@@ -143,7 +208,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
         
     except Exception as e:
-        print(f"Error: {str(e)}")
+        logger.error(f"Error: {str(e)}")
         
         return {
             'statusCode': 500,

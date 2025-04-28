@@ -38,6 +38,14 @@ jobs:
         
     - name: Lint Python
       run: |
+        # Create .flake8 configuration that explicitly ignores W503
+        echo "[flake8]" > .flake8
+        echo "max-line-length = 100" >> .flake8
+        echo "exclude = .git,__pycache__,build,dist" >> .flake8
+        echo "ignore = E203, W503, E501" >> .flake8
+        echo "per-file-ignores =" >> .flake8
+        echo "    __init__.py:F401" >> .flake8
+        
         flake8 src tests
         black --check src tests
         

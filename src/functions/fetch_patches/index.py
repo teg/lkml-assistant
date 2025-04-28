@@ -9,15 +9,30 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 
 from datetime import datetime
 from typing import Dict, List, Any, Optional
-from src.repositories import patch_repository
-from src.utils import patchwork_api
+
+# Fix imports for AWS Lambda environment
+try:
+    # Try standard import pattern first (for local development)
+    from src.repositories import patch_repository
+    from src.utils import patchwork_api
+    from src.functions.fetch_patches import test_mode_handler
+except ImportError:
+    # Fall back to relative imports (for AWS Lambda)
+    import repositories.patch_repository as patch_repository
+    import utils.patchwork_api as patchwork_api
+    import test_mode_handler
 
 # Configure logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # Initialize Lambda client for invoking other functions
-lambda_client = boto3.client("lambda")
+# Allow custom endpoint for testing
+aws_endpoint_url = os.environ.get("AWS_ENDPOINT_URL")
+if aws_endpoint_url:
+    lambda_client = boto3.client("lambda", endpoint_url=aws_endpoint_url)
+else:
+    lambda_client = boto3.client("lambda")
 
 # Name of the fetch discussions Lambda function
 FETCH_DISCUSSIONS_LAMBDA = os.environ.get(
@@ -94,10 +109,19 @@ def create_patch_record(patch_data: Dict[str, Any]) -> Dict[str, Any]:
     return patch_item
 
 
-def get_patches(page: int = 1, per_page: int = 20) -> List[Dict[str, Any]]:
+def get_patches(page: int = 1, per_page: int = 20, event: Dict[str, Any] = None) -> List[Dict[str, Any]]:
     """
     Get patches from Patchwork API with pagination and retry
     """
+    # Check if we're in test mode with mock data
+    if event and event.get("test_mode", False):
+        try:
+            data = test_mode_handler.process_test_data(event)
+            return data.get("results", [])
+        except Exception as e:
+            logger.error(f"Error processing test data: {str(e)}")
+            return []
+
     try:
         # Use the patchwork_api module which handles retries
         data = patchwork_api.fetch_patches(page=page, per_page=per_page, order="-date")
@@ -152,7 +176,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         fetch_discussions = event.get("fetch_discussions", True)
 
         # Get patches from Patchwork
-        patches = get_patches(page, per_page)
+        patches = get_patches(page, per_page, event)
         logger.info(f"Retrieved {len(patches)} patches from Patchwork API")
 
         # Process and store patches
@@ -177,7 +201,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
             # For demo purposes, we'll recursively invoke ourselves for the next page
             # Note: In production, this would be better handled by Step Functions
-            if page < 5:  # Limit to 5 pages for demo
+            if page < 2:  # Limit to 2 pages for development (previously 5)
                 try:
                     next_event = event.copy()
                     next_event["page"] = page + 1

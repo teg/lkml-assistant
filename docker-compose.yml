@@ -16,7 +16,9 @@ services:
       - SERVICES=lambda,sqs,events,logs,cloudwatch
       - DEBUG=1
       - DATA_DIR=/tmp/localstack/data
-    # Remove the Docker socket volume which may cause issues with Podman
+      - LAMBDA_EXECUTOR=local
+      - LAMBDA_REMOTE_DOCKER=false
+      - DYNAMODB_ENDPOINT=http://dynamodb-local:8000
 
   dynamodb-admin:
     image: aaronshaf/dynamodb-admin:latest

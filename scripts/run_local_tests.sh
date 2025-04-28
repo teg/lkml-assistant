@@ -26,10 +26,30 @@ echo -e "${BLUE}Starting Podman containers for testing...${NC}"
 echo -e "${BLUE}Waiting for containers to be ready...${NC}"
 sleep 5
 
-# Upload the Lambda code to LocalStack
+# Prepare Lambda deployment package
 echo -e "${BLUE}Preparing Lambda functions...${NC}"
 mkdir -p .tmp/lambda
+
+# Make sure we have necessary tools
+if ! command -v zip &> /dev/null; then
+    echo -e "${RED}Error: 'zip' utility is not installed. Please install it first.${NC}"
+    exit 1
+fi
+
+# Create Lambda package
+echo -e "${BLUE}Creating Lambda deployment package...${NC}"
 (cd src && zip -r ../.tmp/lambda/fetch-patches.zip functions repositories utils models)
+
+# List the content to verify
+ls -la .tmp/lambda/
+
+# Wait a bit for LocalStack to be fully ready
+echo -e "${BLUE}Waiting for LocalStack to be ready...${NC}"
+sleep 10
+
+# Set up the Lambda functions in LocalStack
+echo -e "${BLUE}Setting up Lambda functions in LocalStack...${NC}"
+./scripts/setup_local_test_env.sh
 
 # Run the actual tests
 echo -e "${BLUE}Running pytest integration tests...${NC}"

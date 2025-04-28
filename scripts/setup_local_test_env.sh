@@ -137,7 +137,17 @@ aws lambda create-function \
     --runtime python3.9 \
     --handler src.functions.fetch_patches.index.handler \
     --zip-file fileb://.tmp/lambda/fetch-patches.zip \
-    --environment "Variables={PATCHES_TABLE_NAME=LkmlAssistant-Patches-test,FETCH_DISCUSSIONS_LAMBDA=LkmlAssistant-FetchDiscussions-test,ENVIRONMENT=test,LOG_LEVEL=DEBUG}" \
+    --environment "Variables={PATCHES_TABLE_NAME=LkmlAssistant-Patches-test,FETCH_DISCUSSIONS_LAMBDA=LkmlAssistant-FetchDiscussions-test,ENVIRONMENT=test,LOG_LEVEL=DEBUG,PATCHWORK_API_URL=https://example.com/api,DYNAMODB_ENDPOINT=http://localhost:8000,AWS_ENDPOINT_URL=http://localhost:4566}" \
+    --role arn:aws:iam::000000000000:role/lambda-role
+
+# Create fetch-discussions Lambda function
+aws lambda create-function \
+    --endpoint-url http://localhost:4566 \
+    --function-name LkmlAssistant-FetchDiscussions-test \
+    --runtime python3.9 \
+    --handler src.functions.fetch_discussions.index.handler \
+    --zip-file fileb://.tmp/lambda/fetch-patches.zip \
+    --environment "Variables={PATCHES_TABLE_NAME=LkmlAssistant-Patches-test,DISCUSSIONS_TABLE_NAME=LkmlAssistant-Discussions-test,ENVIRONMENT=test,LOG_LEVEL=DEBUG,PATCHWORK_API_URL=https://example.com/api,DYNAMODB_ENDPOINT=http://localhost:8000,AWS_ENDPOINT_URL=http://localhost:4566}" \
     --role arn:aws:iam::000000000000:role/lambda-role
 
 echo -e "${GREEN}Local test environment is ready!${NC}"

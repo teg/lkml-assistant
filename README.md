@@ -1,40 +1,47 @@
-# LKML Assistant
+# LKML Community Guide
 
-LKML Assistant is a specialized tool that monitors the Rust for Linux subsystem development on the Linux Kernel Mailing List (LKML). It provides automated tracking, analysis, and insights into the patch review process.
+LKML Community Guide is an expert companion for navigating open source communities, starting with the Rust for Linux subsystem on the Linux Kernel Mailing List (LKML). It serves as your experienced community guide, providing in-depth analysis and context around ongoing development discussions.
 
 ## Purpose
 
-Rust for Linux is an ongoing effort to bring Rust language support to the Linux kernel. This project helps developers, contributors, and observers stay informed about:
+Joining and contributing to established open source communities like the Linux kernel can be daunting. This project bridges the gap by offering expert-level insights that help you understand:
 
-- **Patch progression**: Track patches from submission through the review process
-- **Discussion threads**: Follow technical discussions and issues raised during review
-- **Review status**: Identify patches requiring attention or approaching acceptance
-- **Development trends**: Observe patterns in contribution activity and subsystem evolution
+- **Community dynamics**: Learn how discussions flow and decisions are made
+- **Technical context**: Understand the reasoning behind arguments for and against proposals
+- **Ongoing work status**: Track patches through their journey to acceptance
+- **Historical context**: See how current discussions relate to past decisions
 
-The goal is to reduce friction in the Rust for Linux review process by providing clear visibility into patch status, addressing common workflow challenges:
+### Who This Helps
 
-1. **Information overload**: The high volume of kernel discussions makes following specific patches difficult
-2. **Discussion fragmentation**: Patch feedback spreads across multiple emails and threads
-3. **Status uncertainty**: Determining a patch's current state requires manually checking multiple sources
-4. **Context switching**: Contributors need to constantly monitor mailing lists to catch relevant updates
+- **Newcomers to the community**: Get up to speed quickly with guided insights and explanations
+- **Contributors**: Understand why your contributions might be stalled and what it would take to get them accepted
+- **Reviewers**: Gain better context around what submitters are trying to achieve
+- **Project observers**: Follow technical evolution without drowning in implementation details
+
+### Key Challenges We Address
+
+1. **Community barriers**: Established communities have implicit knowledge that's hard to acquire
+2. **Context fragmentation**: Understanding requires piecing together discussions across many threads
+3. **Missing perspectives**: Technical disagreements often stem from different priorities and constraints
+4. **Knowledge silos**: Expertise is concentrated in long-time contributors, limiting community growth
 
 ## Core Functionality
 
-LKML Assistant:
+LKML Community Guide:
 
 1. **Collects data** from Patchwork API and lore.kernel.org to capture patches and discussions
-2. **Processes content** to classify messages, extract key information, and track status changes
-3. **Builds relationships** between patches, series, and discussions to create a complete picture
-4. **Presents insights** in useful formats for different stakeholders
+2. **Processes content** to classify messages, extract key information, and provide context
+3. **Analyzes discussions** to identify different perspectives, technical barriers, and action items
+4. **Presents expert insights** tailored to different user needs and knowledge levels
 
 ## Technical Approach
 
 This project uses a serverless architecture on AWS, allowing it to scale automatically with minimal operational overhead. The design emphasizes:
 
+- **AI-enhanced analysis**: Machine learning to derive insights from community discussions
 - **Event-driven processing**: New data triggers appropriate workflows automatically
-- **High resilience**: Fault-tolerant design with comprehensive error handling
-- **Low operational costs**: Pay-only-for-usage serverless model minimizes expenses
-- **Extensibility**: Modular design allows for adding new data sources and functionality
+- **Context preservation**: Connections between related discussions maintain historical context
+- **Extensibility**: Modular design allows for supporting additional communities beyond Rust for Linux
 
 For detailed technical information, see:
 - [Architecture Documentation](./docs/architecture/)
@@ -59,27 +66,55 @@ For detailed technical information, see:
 
 ## Getting Started
 
-### Prerequisites
+The LKML Community Guide is designed to grow with the communities it serves. Here's how you can contribute:
+
+### For Users
+
+If you're interested in using the LKML Community Guide:
+
+1. The project is currently in development, focusing first on the Rust for Linux community
+2. We'll provide access details as the prototype becomes available
+3. We welcome input on which communities would benefit most from this approach
+
+### For Contributors
+
+Want to help build the LKML Community Guide? Here's what you need:
+
+#### Prerequisites
 
 - Node.js (v14 or later)
 - AWS CLI configured with appropriate credentials
 - Python 3.9+ (for Lambda functions)
+- Docker/Podman for local testing
 
-### Setup
+#### Development Setup
 
-1. Install dependencies:
+1. Clone this repository:
 
 ```bash
-# For CDK infrastructure
-cd infra
-npm install
-
-# For Python Lambda functions
-cd ../src/functions/fetch-patches
-pip install -r requirements.txt
+git clone https://github.com/teg/lkml-assistant.git
+cd lkml-assistant
 ```
 
-2. Deploy the infrastructure:
+2. Install dependencies:
+
+```bash
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Install infrastructure dependencies
+cd infra
+npm install
+```
+
+3. Run local tests:
+
+```bash
+make test-unit        # Run Python unit tests
+make test-lambda-direct  # Test Lambda functions locally
+```
+
+4. (Optional) Deploy the infrastructure to your AWS account:
 
 ```bash
 cd infra

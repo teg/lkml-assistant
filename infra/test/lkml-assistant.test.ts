@@ -86,7 +86,7 @@ describe('LkmlAssistantStack', () => {
     template.hasResourceProperties('AWS::Lambda::Function', {
       FunctionName: 'LkmlAssistant-FetchPatches-dev',
       Runtime: 'python3.9',
-      Handler: 'index.handler',
+      Handler: 'src/functions/fetch-patches/index.handler',
       Timeout: 300,
       MemorySize: 512,
       Environment: Match.objectLike({
@@ -102,7 +102,7 @@ describe('LkmlAssistantStack', () => {
     template.hasResourceProperties('AWS::Lambda::Function', {
       FunctionName: 'LkmlAssistant-FetchDiscussions-dev',
       Runtime: 'python3.9',
-      Handler: 'index.handler',
+      Handler: 'src/functions/fetch-discussions/index.handler',
       Timeout: 300,
       MemorySize: 512
     });

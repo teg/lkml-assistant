@@ -1,4 +1,4 @@
-.PHONY: test test-unit test-integration test-local test-lambda-direct test-lambda-localstack deploy clean-local format
+.PHONY: test test-unit test-integration test-local test-lambda-direct test-lambda-localstack deploy clean-local format test-post-deploy test-post-deploy-dev test-post-deploy-staging test-post-deploy-prod
 
 # Run all tests
 test:
@@ -36,3 +36,23 @@ clean-local:
 format:
 	chmod +x ./scripts/format.sh
 	./scripts/format.sh
+	
+# Run post-deployment tests against the default (dev) environment
+test-post-deploy:
+	chmod +x ./scripts/post_deploy_test_runner.sh
+	./scripts/post_deploy_test_runner.sh dev
+
+# Run post-deployment tests against dev environment
+test-post-deploy-dev:
+	chmod +x ./scripts/post_deploy_test_runner.sh
+	./scripts/post_deploy_test_runner.sh dev
+
+# Run post-deployment tests against staging environment
+test-post-deploy-staging:
+	chmod +x ./scripts/post_deploy_test_runner.sh
+	./scripts/post_deploy_test_runner.sh staging
+
+# Run post-deployment tests against production environment
+test-post-deploy-prod:
+	chmod +x ./scripts/post_deploy_test_runner.sh
+	./scripts/post_deploy_test_runner.sh prod

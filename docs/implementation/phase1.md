@@ -229,3 +229,55 @@ This phase involves setting up the core AWS infrastructure, data models, data fe
   - Implemented code formatting rules
   - Set coverage thresholds
   - Created code quality documentation
+
+## 1.8: Post-Deployment Testing
+
+**Purpose**: Establish a robust framework for verifying deployed resources in each environment.
+
+**Implementation Details**:
+
+- **Post-Deployment Test Structure**
+  - Create `tests/post_deploy` directory for deployment verification tests
+  - Implement reusable test cases that connect to real AWS resources
+  - Design parameterized test runners to support different environments (dev/staging/prod)
+  - Build environment-specific configuration for tests
+
+- **Automated Verification Framework**
+  - Create `post_deploy_verifier.py` utility for testing deployed Lambdas
+  - Implement test payload generators that match production scenarios
+  - Build AWS SDK client wrappers for Lambda, DynamoDB, and CloudWatch access
+  - Design test result assertion helpers with detailed error reporting
+
+- **Post-Deployment Test Cases**
+  - Implement smoke tests for all Lambda functions
+  - Create data consistency tests between DynamoDB tables
+  - Build end-to-end scenario tests for complete system flows
+  - Implement resource configuration verification tests
+
+- **Integration with CI/CD Pipeline**
+  - Create new GitHub Actions workflow: `post-deploy-verify.yml`
+  - Add automatic test triggering after successful deployments
+  - Implement environment-specific test execution
+  - Create alerting for post-deployment test failures
+
+- **Local Testing Utilities**
+  - Implement `scripts/post_deploy_test_runner.sh` for local execution
+  - Create Makefile targets for running tests against environments:
+    ```
+    make test-post-deploy-dev
+    make test-post-deploy-staging
+    make test-post-deploy-prod
+    ```
+  - Build helper for generating test credentials and configuration
+
+- **Test Result Reporting**
+  - Create CloudWatch dashboard for post-deployment test metrics
+  - Implement test result logging to CloudWatch Logs
+  - Build SNS notifications for critical test failures
+  - Create HTML test reports for each deployment
+
+- **Documentation and Examples**
+  - Document post-deployment testing methodology and best practices
+  - Create example test case templates for different Lambda types
+  - Write troubleshooting guide for common deployment issues
+  - Implement test case writing guidelines for new features

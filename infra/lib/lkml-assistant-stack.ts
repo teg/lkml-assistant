@@ -134,8 +134,19 @@ export class LkmlAssistantStack extends cdk.Stack {
     this.fetchPatchesLambda = new lambda.Function(this, 'FetchPatchesFunction', {
       ...commonLambdaProps,
       functionName: `LkmlAssistant-FetchPatches-${this.environmentName}`,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../../src/functions/fetch-patches')),
+      handler: 'src/functions/fetch-patches/index.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../'), {
+        exclude: [
+          'infra/**', 
+          'node_modules/**', 
+          '.git/**',
+          'docs/**',
+          '.pytest_cache/**',
+          'htmlcov/**',
+          '**/__pycache__/**',
+          '**/*.pyc'
+        ]
+      }),
       timeout: cdk.Duration.seconds(300),
       environment: {
         ...commonEnvVars,
@@ -182,8 +193,19 @@ export class LkmlAssistantStack extends cdk.Stack {
     this.fetchDiscussionsLambda = new lambda.Function(this, 'FetchDiscussionsFunction', {
       ...commonLambdaProps,
       functionName: `LkmlAssistant-FetchDiscussions-${this.environmentName}`,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../../src/functions/fetch-discussions')),
+      handler: 'src/functions/fetch-discussions/index.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../'), {
+        exclude: [
+          'infra/**', 
+          'node_modules/**', 
+          '.git/**',
+          'docs/**',
+          '.pytest_cache/**',
+          'htmlcov/**',
+          '**/__pycache__/**',
+          '**/*.pyc'
+        ]
+      }),
       timeout: cdk.Duration.seconds(300),
       environment: {
         ...commonEnvVars,
@@ -272,8 +294,19 @@ export class LkmlAssistantStack extends cdk.Stack {
     const refreshDiscussionsLambda = new lambda.Function(this, 'RefreshDiscussionsFunction', {
       functionName: 'LkmlAssistant-RefreshDiscussions',
       runtime: lambda.Runtime.PYTHON_3_9,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../../src/functions/refresh-discussions')),
+      handler: 'src/functions/refresh-discussions/index.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../'), {
+        exclude: [
+          'infra/**', 
+          'node_modules/**', 
+          '.git/**',
+          'docs/**',
+          '.pytest_cache/**',
+          'htmlcov/**',
+          '**/__pycache__/**',
+          '**/*.pyc'
+        ]
+      }),
       timeout: cdk.Duration.minutes(10),
       memorySize: 512,
       environment: {

@@ -9,8 +9,16 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 
 from datetime import datetime
 from typing import Dict, List, Any, Optional
-from src.repositories import patch_repository
-from src.utils import patchwork_api
+
+# Fix imports for AWS Lambda environment
+try:
+    # Try standard import pattern first (for local development)
+    from src.repositories import patch_repository
+    from src.utils import patchwork_api
+except ImportError:
+    # Fall back to relative imports (for AWS Lambda)
+    import repositories.patch_repository as patch_repository
+    import utils.patchwork_api as patchwork_api
 
 # Configure logging
 logger = logging.getLogger()

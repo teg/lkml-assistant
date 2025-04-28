@@ -113,6 +113,14 @@ export class LkmlAssistantStack extends cdk.Stack {
 
     // Define Lambda functions
     
+    // Create a Lambda layer with common dependencies
+    const dependenciesLayer = new lambda.LayerVersion(this, 'DependenciesLayer', {
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../lambda_layer.zip')),
+      compatibleRuntimes: [lambda.Runtime.PYTHON_3_9],
+      description: 'Common dependencies for Lambda functions',
+      layerVersionName: `LkmlAssistant-Dependencies-${this.environmentName}`,
+    });
+    
     // Common Lambda configuration
     const commonLambdaProps = {
       runtime: lambda.Runtime.PYTHON_3_9,
@@ -121,6 +129,7 @@ export class LkmlAssistantStack extends cdk.Stack {
       logRetention: this.isProd ? 
         logs.RetentionDays.ONE_MONTH : 
         logs.RetentionDays.ONE_WEEK,
+      layers: [dependenciesLayer],
     };
     
     // Environment variables for metrics
@@ -144,7 +153,9 @@ export class LkmlAssistantStack extends cdk.Stack {
           '.pytest_cache/**',
           'htmlcov/**',
           '**/__pycache__/**',
-          '**/*.pyc'
+          '**/*.pyc',
+          'lambda_layer/**',
+          'lambda_layer.zip'
         ]
       }),
       timeout: cdk.Duration.seconds(300),
@@ -203,7 +214,9 @@ export class LkmlAssistantStack extends cdk.Stack {
           '.pytest_cache/**',
           'htmlcov/**',
           '**/__pycache__/**',
-          '**/*.pyc'
+          '**/*.pyc',
+          'lambda_layer/**',
+          'lambda_layer.zip'
         ]
       }),
       timeout: cdk.Duration.seconds(300),
@@ -295,6 +308,7 @@ export class LkmlAssistantStack extends cdk.Stack {
       functionName: 'LkmlAssistant-RefreshDiscussions',
       runtime: lambda.Runtime.PYTHON_3_9,
       handler: 'src/functions/refresh-discussions/index.handler',
+      layers: [dependenciesLayer],
       code: lambda.Code.fromAsset(path.join(__dirname, '../../'), {
         exclude: [
           'infra/**', 
@@ -304,7 +318,9 @@ export class LkmlAssistantStack extends cdk.Stack {
           '.pytest_cache/**',
           'htmlcov/**',
           '**/__pycache__/**',
-          '**/*.pyc'
+          '**/*.pyc',
+          'lambda_layer/**',
+          'lambda_layer.zip'
         ]
       }),
       timeout: cdk.Duration.minutes(10),

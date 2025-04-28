@@ -24,9 +24,18 @@ test-lambda-direct:
 test-lambda-localstack:
 	./scripts/run_local_tests.sh
 
+# Create Lambda layer with dependencies
+create-lambda-layer:
+	chmod +x ./scripts/create_lambda_layer.sh
+	./scripts/create_lambda_layer.sh
+
 # Deploy to dev environment
-deploy:
-	cd infra && npm run deploy
+deploy: create-lambda-layer
+	cd infra && AWS_PROFILE=lkml-assistant npm run deploy -- -c environment=dev
+
+# Deploy and test the deployment
+deploy-and-test: deploy
+	export AWS_PROFILE=lkml-assistant && make test-post-deploy-dev
 
 # Clean up local test environment
 clean-local:

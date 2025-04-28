@@ -102,10 +102,21 @@ def create_patch_record(patch_data: Dict[str, Any]) -> Dict[str, Any]:
     return patch_item
 
 
-def get_patches(page: int = 1, per_page: int = 20) -> List[Dict[str, Any]]:
+def get_patches(page: int = 1, per_page: int = 20, event: Dict[str, Any] = None) -> List[Dict[str, Any]]:
     """
     Get patches from Patchwork API with pagination and retry
     """
+    # Check if we're in test mode with mock data
+    if event and event.get("test_mode", False):
+        try:
+            # Import the test mode handler dynamically to avoid import errors in production
+            from . import test_mode_handler
+            data = test_mode_handler.process_test_data(event)
+            return data.get("results", [])
+        except Exception as e:
+            logger.error(f"Error processing test data: {str(e)}")
+            return []
+    
     try:
         # Use the patchwork_api module which handles retries
         data = patchwork_api.fetch_patches(page=page, per_page=per_page, order="-date")
@@ -160,7 +171,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         fetch_discussions = event.get("fetch_discussions", True)
 
         # Get patches from Patchwork
-        patches = get_patches(page, per_page)
+        patches = get_patches(page, per_page, event)
         logger.info(f"Retrieved {len(patches)} patches from Patchwork API")
 
         # Process and store patches

@@ -246,9 +246,7 @@ def test_query_discussions_by_patch(
         IndexName="PatchIndex",
         KeyConditionExpression="#gsi1pk = :gsi1pk",
         ExpressionAttributeNames={"#gsi1pk": "gsi1pk"},
-        ExpressionAttributeValues={
-            ":gsi1pk": {"S": f'PATCH#{sample_patch_data["id"]}'}
-        },
+        ExpressionAttributeValues={":gsi1pk": {"S": f'PATCH#{sample_patch_data["id"]}'}},
     )
 
     # Convert DynamoDB format back to Python
@@ -401,9 +399,7 @@ def test_count_discussions_by_patch(
         IndexName="PatchIndex",
         KeyConditionExpression="#gsi1pk = :gsi1pk",
         ExpressionAttributeNames={"#gsi1pk": "gsi1pk"},
-        ExpressionAttributeValues={
-            ":gsi1pk": {"S": f'PATCH#{sample_patch_data["id"]}'}
-        },
+        ExpressionAttributeValues={":gsi1pk": {"S": f'PATCH#{sample_patch_data["id"]}'}},
         Select="COUNT",
     )
 

@@ -27,9 +27,7 @@ def test_fetch_patches_lambda_exists(verifier):
     """Test that the fetch-patches Lambda function exists."""
     # Skip if AWS credentials are not valid
     if not verifier.credentials_valid:
-        pytest.skip(
-            "AWS credentials are not valid. Configure valid credentials to run this test."
-        )
+        pytest.skip("AWS credentials are not valid. Configure valid credentials to run this test.")
         return
 
     # Get Lambda function details
@@ -45,9 +43,7 @@ def test_fetch_patches_lambda_exists(verifier):
     except Exception as e:
         # Check if the error is because the function doesn't exist
         if "Function not found" in str(e):
-            pytest.skip(
-                f"Lambda function {function_name} does not exist yet. Skipping test."
-            )
+            pytest.skip(f"Lambda function {function_name} does not exist yet. Skipping test.")
         else:
             pytest.fail(f"Error checking Lambda function: {str(e)}")
 
@@ -56,9 +52,7 @@ def test_fetch_patches_smoke_test(verifier):
     """Run a smoke test for the fetch-patches Lambda function."""
     # Skip if AWS credentials are not valid
     if not verifier.credentials_valid:
-        pytest.skip(
-            "AWS credentials are not valid. Configure valid credentials to run this test."
-        )
+        pytest.skip("AWS credentials are not valid. Configure valid credentials to run this test.")
         return
 
     try:
@@ -92,9 +86,7 @@ def test_fetch_patches_smoke_test(verifier):
     except Exception as e:
         # Check if the error is because the function doesn't exist
         if "Function not found" in str(e):
-            pytest.skip(
-                "Lambda function FetchPatches does not exist yet. Skipping test."
-            )
+            pytest.skip("Lambda function FetchPatches does not exist yet. Skipping test.")
         else:
             pytest.fail(f"Error in smoke test: {str(e)}")
 
@@ -103,9 +95,7 @@ def test_patches_table_exists(verifier):
     """Test that the Patches DynamoDB table exists and is active."""
     # Skip if AWS credentials are not valid
     if not verifier.credentials_valid:
-        pytest.skip(
-            "AWS credentials are not valid. Configure valid credentials to run this test."
-        )
+        pytest.skip("AWS credentials are not valid. Configure valid credentials to run this test.")
         return
 
     try:
@@ -124,9 +114,7 @@ def test_fetch_and_store(verifier):
     """Test the complete flow of fetching patches and storing them in DynamoDB."""
     # Skip if AWS credentials are not valid
     if not verifier.credentials_valid:
-        pytest.skip(
-            "AWS credentials are not valid. Configure valid credentials to run this test."
-        )
+        pytest.skip("AWS credentials are not valid. Configure valid credentials to run this test.")
         return
 
     try:
@@ -144,9 +132,7 @@ def test_fetch_and_store(verifier):
                 or "ResourceNotFoundException" in str(e)
                 or "not exist" in str(e)
             ):
-                pytest.skip(
-                    "Required resources don't exist yet. Skipping end-to-end test."
-                )
+                pytest.skip("Required resources don't exist yet. Skipping end-to-end test.")
                 return
             raise
 
@@ -180,9 +166,7 @@ def test_fetch_and_store(verifier):
         assert item, f"Patch {patch_id} not found in DynamoDB"
         assert item["id"] == patch_id, "Patch ID mismatch"
 
-        print(
-            f"✅ End-to-end test passed: Patch {patch_id} successfully stored in DynamoDB"
-        )
+        print(f"✅ End-to-end test passed: Patch {patch_id} successfully stored in DynamoDB")
     except Exception as e:
         if (
             "Function not found" in str(e)

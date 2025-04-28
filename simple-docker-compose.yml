@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: lkml-assistant-dynamodb-simple
+    ports:
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
+
+  aws-cli:
+    image: amazon/aws-cli:latest
+    container_name: lkml-assistant-aws-cli
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    depends_on:
+      - dynamodb-local
+    entrypoint: /bin/sh
+    tty: true
+    command: -c "sleep infinity"

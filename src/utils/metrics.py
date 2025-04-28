@@ -41,9 +41,7 @@ def publish_metric(
         if dimensions:
             metric_data["Dimensions"] = dimensions
 
-        response = cloudwatch.put_metric_data(
-            Namespace=namespace, MetricData=[metric_data]
-        )
+        response = cloudwatch.put_metric_data(Namespace=namespace, MetricData=[metric_data])
 
         logger.debug(f"Published metric {metric_name}={value} {unit}")
         return True

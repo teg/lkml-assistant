@@ -1,0 +1,3 @@
+[0;34mSetting up local test environment for LKML Assistant...[0m
+[0;34mStarting local AWS services with Podman...[0m
+Error: creating container storage: the container name "lkml-assistant-dynamodb" is already in use by e9178aea7e77f48a065b453eafaecaf56d4fb8e2154d7c36d925e14cbe6d8630. You have to remove that container to be able to reuse that name: that name is already in use

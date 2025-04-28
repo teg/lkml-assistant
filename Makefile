@@ -1,4 +1,4 @@
-.PHONY: test test-unit test-integration test-local test-lambda-direct test-lambda-localstack deploy clean-local format test-post-deploy test-post-deploy-dev test-post-deploy-staging test-post-deploy-prod
+.PHONY: test test-unit test-integration test-local test-lambda-direct test-lambda-localstack deploy clean-local format fmt setup-hooks test-post-deploy test-post-deploy-dev test-post-deploy-staging test-post-deploy-prod
 
 # Run all tests
 test:
@@ -41,10 +41,20 @@ deploy-and-test: deploy
 clean-local:
 	./scripts/clean_local_test_env.sh --stop-containers
 	
-# Format Python code with Black
+# Format Python code with Black (keeping for backward compatibility)
 format:
 	chmod +x ./scripts/format.sh
 	./scripts/format.sh
+
+# Format all code in the project (Python and TypeScript)
+fmt:
+	chmod +x ./scripts/format_all.sh
+	./scripts/format_all.sh
+	
+# Set up Git hooks to run formatting before commits
+setup-hooks:
+	chmod +x ./scripts/setup_git_hooks.sh
+	./scripts/setup_git_hooks.sh
 	
 # Run post-deployment tests against the default (dev) environment
 test-post-deploy:

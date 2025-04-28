@@ -9,9 +9,7 @@ from unittest.mock import patch, MagicMock
 from datetime import datetime
 
 # Add project root to Python path
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
-)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
 # Import the metrics utility functions
 from src.utils.metrics import publish_metric, record_lambda_invocation, record_api_call
@@ -65,9 +63,7 @@ class TestMetricsUtils(unittest.TestCase):
         mock_put_metric.return_value = {"ResponseMetadata": {"HTTPStatusCode": 200}}
 
         # Execute function with custom namespace
-        result = publish_metric(
-            "TestMetric", 42.0, "Count", namespace="CustomNamespace"
-        )
+        result = publish_metric("TestMetric", 42.0, "Count", namespace="CustomNamespace")
 
         # Verify
         mock_put_metric.assert_called_once()
@@ -110,9 +106,7 @@ class TestMetricsUtils(unittest.TestCase):
         self.assertEqual(args1[0], "Invocations")
         self.assertEqual(args1[1], 1)
         self.assertEqual(args1[2], "Count")
-        self.assertIn(
-            {"Name": "FunctionName", "Value": "TestFunction"}, kwargs1["dimensions"]
-        )
+        self.assertIn({"Name": "FunctionName", "Value": "TestFunction"}, kwargs1["dimensions"])
 
         # Check Duration metric
         args3, kwargs3 = mock_publish.call_args_list[2]

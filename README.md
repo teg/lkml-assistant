@@ -150,9 +150,30 @@ make test-unit          # Run unit tests only
 make test-lambda-direct # Run direct Lambda invocation tests
 make test-local         # Run tests with Docker/Podman containers
 make format             # Format Python code with Black
+make fmt                # Format all code (Python and TypeScript)
+make setup-hooks        # Install Git hooks for automatic formatting
 ```
 
 For more details on our testing approach, see the [Local Testing Approach decision document](./docs/architecture/decisions/0003-local-testing-approach.md).
+
+### Code Formatting
+
+The project uses automated code formatting to maintain consistency:
+
+- **Python**: Black formatter and flake8 linter
+- **TypeScript**: Prettier formatter and ESLint linter
+
+To format all code in the project, run:
+
+```bash
+make fmt
+```
+
+Git hooks are available to automatically format code before each commit. To set up the hooks, run:
+
+```bash
+make setup-hooks
+```
 
 ## License
 

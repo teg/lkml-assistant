@@ -35,9 +35,7 @@ else:
     dynamodb = boto3.resource("dynamodb", region_name=region)
 
 # Initialize table references
-patches_table = dynamodb.Table(
-    os.environ.get("PATCHES_TABLE_NAME", "LkmlAssistant-Patches")
-)
+patches_table = dynamodb.Table(os.environ.get("PATCHES_TABLE_NAME", "LkmlAssistant-Patches"))
 discussions_table = dynamodb.Table(
     os.environ.get("DISCUSSIONS_TABLE_NAME", "LkmlAssistant-Discussions")
 )

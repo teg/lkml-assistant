@@ -12,8 +12,12 @@ on:
           - dev
           - staging
           - prod
+      test_file:
+        description: 'Specific test file to run (leave empty to run all)'
+        required: false
+        type: string
   
-  # Optionally trigger automatically after successful deployment
+  # Automatically trigger after successful deployment
   workflow_run:
     workflows: ["Deploy"]
     types:
@@ -32,10 +36,10 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.9'
           cache: 'pip'
@@ -43,8 +47,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install pytest pytest-html boto3 moto
           pip install -r requirements.txt
-          pip install -r requirements-dev.txt
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -56,18 +60,75 @@ jobs:
       - name: Run post-deployment tests
         run: |
           echo "Running post-deployment tests for $ENVIRONMENT environment"
-          python -m tests.post_deploy.runner --env $ENVIRONMENT --verbose --report-dir test-reports
+          
+          # Set up test parameters
+          TEST_PARAMS=""
+          if [ -n "${{ github.event.inputs.test_file }}" ]; then
+            TEST_PARAMS="--test-file ${{ github.event.inputs.test_file }}"
+          fi
+          
+          # Run tests with detailed output
+          chmod +x ./scripts/post_deploy_test_runner.sh
+          ./scripts/post_deploy_test_runner.sh $ENVIRONMENT --verbose --report-dir test-reports $TEST_PARAMS
+      
+      - name: Store test exit code
+        id: store_exit_code
+        if: always()
+        run: echo "test_exit_code=$?" >> $GITHUB_OUTPUT
       
       - name: Upload test reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-reports-${{ env.ENVIRONMENT }}
           path: test-reports/
       
-      - name: Notify on failure
+      - name: Publish test results
+        if: always()
+        run: |
+          echo "## Post-Deployment Test Results for $ENVIRONMENT" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f test-reports/*_*/summary.txt ]; then
+            cat test-reports/*_*/summary.txt >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No test summary available" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Add direct link to test reports
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "View full [HTML test report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Record metrics to CloudWatch
+        if: always()
+        run: |
+          # Record test metrics to CloudWatch
+          aws cloudwatch put-metric-data \
+            --namespace "LkmlAssistant/PostDeployTests" \
+            --metric-name "TestRun" \
+            --dimensions Environment=$ENVIRONMENT \
+            --value 1 \
+            --timestamp $(date +%s)
+          
+          # Record test success/failure
+          aws cloudwatch put-metric-data \
+            --namespace "LkmlAssistant/PostDeployTests" \
+            --metric-name "TestSuccess" \
+            --dimensions Environment=$ENVIRONMENT \
+            --value ${{ steps.store_exit_code.outputs.test_exit_code == 0 && 1 || 0 }} \
+            --timestamp $(date +%s)
+      
+      - name: Send SNS notification on failure
         if: failure()
-        uses: actions/github-script@v6
+        run: |
+          # Send SNS notification on failure
+          aws sns publish \
+            --topic-arn ${{ secrets.SNS_TOPIC_ARN || 'arn:aws:sns:us-east-1:123456789012:LkmlAssistant-Alerts' }} \
+            --subject "Post-deployment tests failed for $ENVIRONMENT" \
+            --message "Post-deployment verification tests have failed for the $ENVIRONMENT environment. Please check the workflow run for details: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      
+      - name: Create GitHub issue on failure
+        if: failure()
+        uses: actions/github-script@v7
         with:
           script: |
             const { repo, owner } = context.repo;
@@ -75,6 +136,14 @@ jobs:
               owner,
               repo,
               title: `Post-deployment tests failed for ${process.env.ENVIRONMENT}`,
-              body: `Post-deployment verification tests have failed for the ${process.env.ENVIRONMENT} environment. Please check the [workflow run](https://github.com/${owner}/${repo}/actions/runs/${context.runId}) for details.`,
-              labels: ['bug', 'deployment']
+              body: `Post-deployment verification tests have failed for the ${process.env.ENVIRONMENT} environment.
+              
+              ## Details
+              - Environment: ${process.env.ENVIRONMENT}
+              - Workflow run: https://github.com/${owner}/${repo}/actions/runs/${context.runId}
+              - Triggered by: ${context.actor}
+              - Date: ${new Date().toISOString()}
+              
+              Please investigate and fix the failing tests as soon as possible.`,
+              labels: ['bug', 'deployment', 'high-priority']
             });

@@ -25,9 +25,7 @@ os.environ["DISCUSSIONS_TABLE_NAME"] = "LkmlAssistant-Discussions-test"
 try:
     from moto import mock_dynamodb
 except ImportError:
-    print(
-        "Moto library is required for integration tests. Install it with: pip install moto"
-    )
+    print("Moto library is required for integration tests. Install it with: pip install moto")
     sys.exit(1)
 
 
@@ -236,19 +234,13 @@ class TestDynamoDBIntegration(unittest.TestCase):
         self.assertEqual(saved_discussion["id"], discussion_id)
 
         # 2. Test get_discussion_by_id
-        retrieved_discussion = discussion_repository.get_discussion_by_id(
-            discussion_id, timestamp
-        )
+        retrieved_discussion = discussion_repository.get_discussion_by_id(discussion_id, timestamp)
         self.assertEqual(retrieved_discussion["id"], discussion_id)
         self.assertEqual(retrieved_discussion["subject"], "Test Subject")
 
         # 3. Test update_discussion_summary
-        discussion_repository.update_discussion_summary(
-            discussion_id, timestamp, "Updated summary"
-        )
-        updated_discussion = discussion_repository.get_discussion_by_id(
-            discussion_id, timestamp
-        )
+        discussion_repository.update_discussion_summary(discussion_id, timestamp, "Updated summary")
+        updated_discussion = discussion_repository.get_discussion_by_id(discussion_id, timestamp)
         self.assertEqual(updated_discussion["summary"], "Updated summary")
 
         # 4. Test get_discussions_by_patch
@@ -257,16 +249,12 @@ class TestDynamoDBIntegration(unittest.TestCase):
         self.assertEqual(discussions[0]["id"], discussion_id)
 
         # 5. Test get_discussions_by_thread
-        discussions, _ = discussion_repository.get_discussions_by_thread(
-            "test-thread-id"
-        )
+        discussions, _ = discussion_repository.get_discussions_by_thread("test-thread-id")
         self.assertEqual(len(discussions), 1)
         self.assertEqual(discussions[0]["id"], discussion_id)
 
         # 6. Test get_discussions_by_author
-        discussions, _ = discussion_repository.get_discussions_by_author(
-            "author@example.com"
-        )
+        discussions, _ = discussion_repository.get_discussions_by_author("author@example.com")
         self.assertEqual(len(discussions), 1)
         self.assertEqual(discussions[0]["id"], discussion_id)
 

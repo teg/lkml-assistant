@@ -16,12 +16,8 @@ def pytest_configure(config):
     """Configure PyTest for post-deployment tests."""
     # Add custom markers
     config.addinivalue_line("markers", "smoke: smoke tests for deployed resources")
-    config.addinivalue_line(
-        "markers", "integration: integration tests for deployed resources"
-    )
-    config.addinivalue_line(
-        "markers", "configuration: tests for resource configuration"
-    )
+    config.addinivalue_line("markers", "integration: integration tests for deployed resources")
+    config.addinivalue_line("markers", "configuration: tests for resource configuration")
 
 
 @pytest.fixture(scope="session")
@@ -47,9 +43,7 @@ def aws_profile():
 @pytest.fixture(scope="session")
 def verifier(environment, aws_region, aws_profile):
     """Create a deployment verifier for tests."""
-    return DeploymentVerifier(
-        environment=environment, region=aws_region, profile=aws_profile
-    )
+    return DeploymentVerifier(environment=environment, region=aws_region, profile=aws_profile)
 
 
 @pytest.fixture

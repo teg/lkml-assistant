@@ -16,14 +16,10 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # Get table name from environment or use default
-DISCUSSIONS_TABLE = os.environ.get(
-    "DISCUSSIONS_TABLE_NAME", "LkmlAssistant-Discussions"
-)
+DISCUSSIONS_TABLE = os.environ.get("DISCUSSIONS_TABLE_NAME", "LkmlAssistant-Discussions")
 
 
-def get_discussion_by_id(
-    discussion_id: str, timestamp: Optional[str] = None
-) -> DiscussionDbRecord:
+def get_discussion_by_id(discussion_id: str, timestamp: Optional[str] = None) -> DiscussionDbRecord:
     """
     Get a discussion by its ID
     """
@@ -54,9 +50,7 @@ def save_discussion(discussion: DiscussionDbRecord) -> DiscussionDbRecord:
         raise
 
 
-def update_discussion_summary(
-    discussion_id: str, timestamp: str, summary: str
-) -> Dict[str, Any]:
+def update_discussion_summary(discussion_id: str, timestamp: str, summary: str) -> Dict[str, Any]:
     """
     Update the summary for a discussion
     """
@@ -88,9 +82,7 @@ def update_discussion_sentiment(
         )
         return result
     except Exception as e:
-        logger.error(
-            f"Error updating sentiment for discussion {discussion_id}: {str(e)}"
-        )
+        logger.error(f"Error updating sentiment for discussion {discussion_id}: {str(e)}")
         raise
 
 
@@ -263,9 +255,7 @@ def batch_get_discussions(
             request_items = {DISCUSSIONS_TABLE: {"Keys": keys, "ConsistentRead": False}}
 
             response = dynamodb.batch_get_items(request_items)
-            all_discussions.extend(
-                response.get("Responses", {}).get(DISCUSSIONS_TABLE, [])
-            )
+            all_discussions.extend(response.get("Responses", {}).get(DISCUSSIONS_TABLE, []))
 
         return all_discussions
     except Exception as e:

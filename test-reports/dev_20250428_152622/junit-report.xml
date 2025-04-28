@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="2" time="4.571" timestamp="2025-04-28T15:26:22.582408" hostname="MacBook-Pro"><testcase classname="tests.post_deploy.test_fetch_patches" name="test_fetch_patches_lambda_exists" time="1.264" /><testcase classname="tests.post_deploy.test_fetch_patches" name="test_fetch_patches_smoke_test" time="3.141"><failure message="Failed: Error in smoke test: Smoke test failed: {'error': 'Lambda function error: {\'errorMessage\': &quot;Unable to import module \'src/functions/fetch-patches/index\': No module named \'requests\'&quot;, \'errorType\': \'Runtime.ImportModuleError\', \'requestId\': \'\', \'stackTrace\': []}'}&#10;assert False">verifier = &lt;tests.post_deploy.post_deploy_verifier.DeploymentVerifier object at 0x104022210&gt;
+
+    def test_fetch_patches_smoke_test(verifier):
+        """Run a smoke test for the fetch-patches Lambda function."""
+        # Skip if AWS credentials are not valid
+        if not verifier.credentials_valid:
+            pytest.skip("AWS credentials are not valid. Configure valid credentials to run this test.")
+            return
+    
+        try:
+            # First check if the function exists
+            function_name = f"LkmlAssistant-FetchPatches-{ENVIRONMENT}"
+            verifier.lambda_client.get_function(FunctionName=function_name)
+    
+            # Generate test payload
+            payload = TestPayloads.fetch_patches_payload(limit=2)
+    
+            # Run the smoke test
+            success, response = verifier.run_smoke_test("FetchPatches", payload)
+    
+            # Verify the response
+&gt;           assert success, f"Smoke test failed: {response}"
+E           AssertionError: Smoke test failed: {'error': 'Lambda function error: {\'errorMessage\': "Unable to import module \'src/functions/fetch-patches/index\': No module named \'requests\'", \'errorType\': \'Runtime.ImportModuleError\', \'requestId\': \'\', \'stackTrace\': []}'}
+E           assert False
+
+tests/post_deploy/test_fetch_patches.py:70: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+verifier = &lt;tests.post_deploy.post_deploy_verifier.DeploymentVerifier object at 0x104022210&gt;
+
+    def test_fetch_patches_smoke_test(verifier):
+        """Run a smoke test for the fetch-patches Lambda function."""
+        # Skip if AWS credentials are not valid
+        if not verifier.credentials_valid:
+            pytest.skip("AWS credentials are not valid. Configure valid credentials to run this test.")
+            return
+    
+        try:
+            # First check if the function exists
+            function_name = f"LkmlAssistant-FetchPatches-{ENVIRONMENT}"
+            verifier.lambda_client.get_function(FunctionName=function_name)
+    
+            # Generate test payload
+            payload = TestPayloads.fetch_patches_payload(limit=2)
+    
+            # Run the smoke test
+            success, response = verifier.run_smoke_test("FetchPatches", payload)
+    
+            # Verify the response
+            assert success, f"Smoke test failed: {response}"
+            assert "body" in response, "Response missing body"
+    
+            # Parse the body if it's a string
+            body = response["body"]
+            if isinstance(body, str):
+                body = json.loads(body)
+    
+            # Verify the response structure
+            assert "patches" in body, "Response body missing patches"
+    
+            print(f"✅ Fetch patches smoke test passed")
+        except Exception as e:
+            # Check if the error is because the function doesn't exist
+            if "Function not found" in str(e):
+                pytest.skip(f"Lambda function FetchPatches does not exist yet. Skipping test.")
+            else:
+&gt;               pytest.fail(f"Error in smoke test: {str(e)}")
+E               Failed: Error in smoke test: Smoke test failed: {'error': 'Lambda function error: {\'errorMessage\': "Unable to import module \'src/functions/fetch-patches/index\': No module named \'requests\'", \'errorType\': \'Runtime.ImportModuleError\', \'requestId\': \'\', \'stackTrace\': []}'}
+E               assert False
+
+tests/post_deploy/test_fetch_patches.py:87: Failed</failure></testcase></testsuite></testsuites>

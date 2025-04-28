@@ -10,9 +10,7 @@ from unittest.mock import patch, MagicMock
 from datetime import datetime
 
 # Add project root to Python path
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
-)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
 # Import the Lambda function code
 from src.functions.fetch_patches.index import (

@@ -86,9 +86,7 @@ def test_fetch_patches_lambda_localstack(
     try:
         lambda_client.get_function(FunctionName="LkmlAssistant-FetchPatches-test")
     except Exception:
-        pytest.skip(
-            "LkmlAssistant-FetchPatches-test function not deployed to LocalStack"
-        )
+        pytest.skip("LkmlAssistant-FetchPatches-test function not deployed to LocalStack")
 
     # Create test payload
     payload = {

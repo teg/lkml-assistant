@@ -30,9 +30,7 @@ class TestPatchRepository(unittest.TestCase):
         result = patch_repository.get_patch_by_id("123")
 
         # Assert
-        mock_get_item.assert_called_once_with(
-            patch_repository.PATCHES_TABLE, {"id": "123"}
-        )
+        mock_get_item.assert_called_once_with(patch_repository.PATCHES_TABLE, {"id": "123"})
         self.assertEqual(result, mock_patch)
 
     @patch("src.utils.dynamodb.put_item")
@@ -50,9 +48,7 @@ class TestPatchRepository(unittest.TestCase):
         result = patch_repository.save_patch(patch_data)
 
         # Assert
-        mock_put_item.assert_called_once_with(
-            patch_repository.PATCHES_TABLE, patch_data
-        )
+        mock_put_item.assert_called_once_with(patch_repository.PATCHES_TABLE, patch_data)
         self.assertEqual(result, patch_data)
 
     @patch("src.utils.dynamodb.update_item")

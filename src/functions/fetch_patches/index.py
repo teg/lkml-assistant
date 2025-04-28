@@ -160,9 +160,7 @@ def trigger_discussions_fetch(patch_id: str, message_id: str) -> None:
             )
 
     except Exception as e:
-        logger.error(
-            f"Error triggering discussion fetch for patch {patch_id}: {str(e)}"
-        )
+        logger.error(f"Error triggering discussion fetch for patch {patch_id}: {str(e)}")
 
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:

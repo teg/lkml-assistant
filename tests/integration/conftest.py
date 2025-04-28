@@ -198,9 +198,7 @@ def patches_table(dynamodb_client):
         items = response.get("Items", [])
         for item in items:
             patch_id = item["id"]["S"]
-            dynamodb_client.delete_item(
-                TableName=table_name, Key={"id": {"S": patch_id}}
-            )
+            dynamodb_client.delete_item(TableName=table_name, Key={"id": {"S": patch_id}})
     except Exception as e:
         print(f"Error clearing patches table: {str(e)}")
 

@@ -1,39 +1,88 @@
 #!/bin/bash
 
-# Script to run post-deployment tests against a specific environment
-# Usage: ./scripts/post_deploy_test_runner.sh [dev|staging|prod]
-
-# Set default environment if not provided
-ENVIRONMENT=${1:-dev}
-VALID_ENVIRONMENTS=("dev" "staging" "prod")
-
-# Colors for output
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# Script to run post-deployment tests for a specific environment
+# Usage: ./post_deploy_test_runner.sh [env] [options]
 
 # Detect script directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
 
-# Validate environment
-valid_env=false
-for env in "${VALID_ENVIRONMENTS[@]}"; do
-  if [ "$ENVIRONMENT" == "$env" ]; then
-    valid_env=true
-    break
-  fi
+# Colors
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+# Default environment is dev
+ENV="dev"
+# Default region
+REGION="us-east-1"
+# Default report directory
+REPORT_DIR="test-reports"
+# Default verbosity
+VERBOSE=false
+# Default metrics reporting
+NO_METRICS=false
+# Default dry run mode
+DRY_RUN=false
+# Default test file (empty to run all)
+TEST_FILE=""
+
+# Parse arguments
+if [ $# -gt 0 ]; then
+  ENV="$1"
+  shift
+fi
+
+# Parse remaining options
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --region)
+      REGION="$2"
+      shift 2
+      ;;
+    --profile)
+      PROFILE="$2"
+      shift 2
+      ;;
+    --report-dir)
+      REPORT_DIR="$2"
+      shift 2
+      ;;
+    --test-file)
+      TEST_FILE="$2"
+      shift 2
+      ;;
+    --verbose|-v)
+      VERBOSE=true
+      shift
+      ;;
+    --no-metrics)
+      NO_METRICS=true
+      shift
+      ;;
+    --dry-run)
+      DRY_RUN=true
+      shift
+      ;;
+    *)
+      echo -e "${RED}Unknown option: $1${NC}"
+      echo "Usage: $0 [env] [--region REGION] [--profile PROFILE] [--report-dir DIR] [--test-file FILE] [--verbose] [--no-metrics] [--dry-run]"
+      exit 1
+      ;;
+  esac
 done
 
-if [ "$valid_env" = false ]; then
-  echo -e "${RED}Error: Invalid environment '${ENVIRONMENT}'. Must be one of: ${VALID_ENVIRONMENTS[*]}${NC}"
+# Validate environment
+if [[ ! "$ENV" =~ ^(dev|staging|prod)$ ]]; then
+  echo -e "${RED}Invalid environment: $ENV${NC}"
+  echo "Environment must be one of: dev, staging, prod"
   exit 1
 fi
 
-# Check if running against production
-if [ "$ENVIRONMENT" == "prod" ]; then
+# Confirm production tests
+if [ "$ENV" == "prod" ]; then
   echo -e "${YELLOW}Warning: You are about to run tests against the PRODUCTION environment.${NC}"
   read -p "Are you sure you want to continue? (y/N) " -n 1 -r
   echo
@@ -43,7 +92,36 @@ if [ "$ENVIRONMENT" == "prod" ]; then
   fi
 fi
 
-echo -e "${BLUE}Running post-deployment tests for ${ENVIRONMENT} environment...${NC}"
+# Build arguments for the Python runner
+ARGS=("--env" "$ENV" "--region" "$REGION")
+
+if [ -n "$PROFILE" ]; then
+  ARGS+=("--profile" "$PROFILE")
+fi
+
+if [ -n "$REPORT_DIR" ]; then
+  ARGS+=("--report-dir" "$REPORT_DIR")
+fi
+
+if [ -n "$TEST_FILE" ]; then
+  ARGS+=("--test-file" "$TEST_FILE")
+fi
+
+if [ "$VERBOSE" = true ]; then
+  ARGS+=("--verbose")
+fi
+
+if [ "$NO_METRICS" = true ]; then
+  ARGS+=("--no-metrics")
+fi
+
+if [ "$DRY_RUN" = true ]; then
+  ARGS+=("--dry-run")
+fi
+
+# Run tests
+echo -e "${BLUE}Running post-deployment tests for ${GREEN}$ENV${BLUE} environment...${NC}"
+echo -e "${BLUE}Test results will be saved to: ${GREEN}$REPORT_DIR${NC}"
 
 # Setup Python virtual environment if needed
 if [ ! -d "${PROJECT_ROOT}/venv" ]; then
@@ -85,26 +163,29 @@ if [ ! -f "${PROJECT_ROOT}/tests/post_deploy/runner.py" ]; then
   exit 1
 fi
 
-# Run the post-deployment tests
-echo -e "${BLUE}Executing tests against ${ENVIRONMENT} environment...${NC}"
+# For more predictable Python environment
+cd "$PROJECT_ROOT"
 
-# Check if AWS_PROFILE is set
-if [ -n "$AWS_PROFILE" ]; then
-  echo -e "${BLUE}Using AWS profile: ${AWS_PROFILE}${NC}"
-  AWS_CMD_PROFILE="--profile $AWS_PROFILE"
+# Run the Python runner with the collected arguments
+python -m tests.post_deploy.runner "${ARGS[@]}"
+EXIT_CODE=$?
+
+# Show test summary
+LATEST_REPORT_DIR=$(find "$REPORT_DIR" -maxdepth 1 -name "${ENV}_*" -type d | sort -r | head -n 1)
+if [ -n "$LATEST_REPORT_DIR" ] && [ -f "$LATEST_REPORT_DIR/summary.txt" ]; then
+  echo ""
+  echo -e "${BLUE}Test Summary:${NC}"
+  cat "$LATEST_REPORT_DIR/summary.txt"
+  echo ""
+  echo -e "${BLUE}Full HTML report is available at: ${GREEN}$LATEST_REPORT_DIR/html-report.html${NC}"
 else
-  AWS_CMD_PROFILE=""
+  echo -e "${YELLOW}No test summary available${NC}"
 fi
 
-cd "${PROJECT_ROOT}"
-python -m tests.post_deploy.runner --env "$ENVIRONMENT" --verbose ${AWS_CMD_PROFILE:+--profile "$AWS_PROFILE"}
-
-# Check the exit code
-EXIT_CODE=$?
 if [ $EXIT_CODE -eq 0 ]; then
-  echo -e "${GREEN}All post-deployment tests passed!${NC}"
+  echo -e "${GREEN}Tests completed successfully!${NC}"
 else
-  echo -e "${RED}Post-deployment tests failed with exit code ${EXIT_CODE}${NC}"
+  echo -e "${RED}Tests failed with exit code $EXIT_CODE${NC}"
 fi
 
 # Deactivate virtual environment

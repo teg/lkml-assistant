@@ -57,14 +57,10 @@ def parse_email_content(raw_content: str) -> Dict[str, Any]:
         for part in email_message.walk():
             content_type = part.get_content_type()
             if content_type == "text/plain":
-                content = part.get_payload(decode=True).decode(
-                    "utf-8", errors="replace"
-                )
+                content = part.get_payload(decode=True).decode("utf-8", errors="replace")
                 break
     else:
-        content = email_message.get_payload(decode=True).decode(
-            "utf-8", errors="replace"
-        )
+        content = email_message.get_payload(decode=True).decode("utf-8", errors="replace")
 
     # Extract message IDs
     message_id = extract_message_id(headers.get("message-id", ""))
@@ -152,15 +148,11 @@ def fetch_thread_for_patch(patch_id: str, message_id: str) -> List[Dict[str, Any
 
         return messages
     except Exception as e:
-        logger.error(
-            f"Error fetching thread for patch {patch_id} ({message_id}): {str(e)}"
-        )
+        logger.error(f"Error fetching thread for patch {patch_id} ({message_id}): {str(e)}")
         return []
 
 
-def create_discussion_record(
-    email_data: Dict[str, Any], patch_id: str
-) -> Dict[str, Any]:
+def create_discussion_record(email_data: Dict[str, Any], patch_id: str) -> Dict[str, Any]:
     """
     Create a discussion record from email data
     """
@@ -220,9 +212,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     Lambda function to fetch discussions for a patch
     """
     try:
-        logger.info(
-            f"Starting fetch discussions lambda at {datetime.utcnow().isoformat()}"
-        )
+        logger.info(f"Starting fetch discussions lambda at {datetime.utcnow().isoformat()}")
 
         # Extract patch ID and message ID from the event
         patch_id = event.get("patch_id")

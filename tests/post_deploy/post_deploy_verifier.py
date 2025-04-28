@@ -90,9 +90,7 @@ class DeploymentVerifier:
             self.logs_client = self.session.client("logs")
             self.resource_prefix = f"LkmlAssistant-{environment}"
 
-    def invoke_lambda(
-        self, function_name: str, payload: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def invoke_lambda(self, function_name: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         """
         Invoke a Lambda function and return the response.
 
@@ -144,9 +142,7 @@ class DeploymentVerifier:
         """
         # Skip if credentials are invalid
         if not self.credentials_valid:
-            logger.warning(
-                "Skipping DynamoDB table verification due to invalid credentials"
-            )
+            logger.warning("Skipping DynamoDB table verification due to invalid credentials")
             raise ValueError(
                 "AWS credentials are not valid. Configure valid credentials to run this test."
             )
@@ -159,9 +155,7 @@ class DeploymentVerifier:
             response = table.meta.client.describe_table(TableName=full_table_name)
             status = response["Table"]["TableStatus"]
 
-            logger.info(
-                f"DynamoDB table {full_table_name} exists with status: {status}"
-            )
+            logger.info(f"DynamoDB table {full_table_name} exists with status: {status}")
             return status == "ACTIVE"
         except Exception as e:
             logger.error(f"Error verifying DynamoDB table {full_table_name}: {str(e)}")
@@ -186,9 +180,7 @@ class DeploymentVerifier:
         """
         # Skip if credentials are invalid
         if not self.credentials_valid:
-            logger.warning(
-                "Skipping CloudWatch logs retrieval due to invalid credentials"
-            )
+            logger.warning("Skipping CloudWatch logs retrieval due to invalid credentials")
             raise ValueError(
                 "AWS credentials are not valid. Configure valid credentials to run this test."
             )
@@ -226,9 +218,7 @@ class DeploymentVerifier:
 
                 all_events.extend(events_response.get("events", []))
 
-            logger.info(
-                f"Retrieved {len(all_events)} log events for {full_function_name}"
-            )
+            logger.info(f"Retrieved {len(all_events)} log events for {full_function_name}")
             return all_events
 
         except Exception as e:
@@ -303,6 +293,18 @@ class TestPayloads:
     ) -> Dict[str, Any]:
         """Generate a test payload for the fetch-discussions Lambda."""
         return {"patch_id": patch_id, "message_id": message_id, "test_mode": True}
+
+    @staticmethod
+    def refresh_discussions_payload(
+        days_to_look_back: int = 7, limit: int = 5, test_mode: bool = True
+    ) -> Dict[str, Any]:
+        """Generate a test payload for the refresh-discussions Lambda."""
+        return {
+            "days_to_look_back": days_to_look_back,
+            "limit": limit,
+            "source": "test",
+            "test_mode": test_mode,
+        }
 
     @staticmethod
     def process_discussions_payload(patch_id: str = "test-patch-id") -> Dict[str, Any]:

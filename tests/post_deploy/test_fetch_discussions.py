@@ -27,9 +27,7 @@ def test_fetch_discussions_lambda_exists(verifier):
     """Test that the fetch-discussions Lambda function exists."""
     # Skip if AWS credentials are not valid
     if not verifier.credentials_valid:
-        pytest.skip(
-            "AWS credentials are not valid. Configure valid credentials to run this test."
-        )
+        pytest.skip("AWS credentials are not valid. Configure valid credentials to run this test.")
         return
 
     # Get Lambda function details
@@ -45,9 +43,7 @@ def test_fetch_discussions_lambda_exists(verifier):
     except Exception as e:
         # Check if the error is because the function doesn't exist
         if "Function not found" in str(e):
-            pytest.skip(
-                f"Lambda function {function_name} does not exist yet. Skipping test."
-            )
+            pytest.skip(f"Lambda function {function_name} does not exist yet. Skipping test.")
         else:
             pytest.fail(f"Error checking Lambda function: {str(e)}")
 
@@ -56,9 +52,7 @@ def test_fetch_discussions_smoke_test(verifier):
     """Run a smoke test for the fetch-discussions Lambda function."""
     # Skip if AWS credentials are not valid
     if not verifier.credentials_valid:
-        pytest.skip(
-            "AWS credentials are not valid. Configure valid credentials to run this test."
-        )
+        pytest.skip("AWS credentials are not valid. Configure valid credentials to run this test.")
         return
 
     try:
@@ -91,9 +85,7 @@ def test_fetch_discussions_smoke_test(verifier):
     except Exception as e:
         # Check if the error is because the function doesn't exist
         if "Function not found" in str(e):
-            pytest.skip(
-                "Lambda function FetchDiscussions does not exist yet. Skipping test."
-            )
+            pytest.skip("Lambda function FetchDiscussions does not exist yet. Skipping test.")
         else:
             pytest.fail(f"Error in smoke test: {str(e)}")
 
@@ -102,9 +94,7 @@ def test_discussions_table_exists(verifier):
     """Test that the Discussions DynamoDB table exists and is active."""
     # Skip if AWS credentials are not valid
     if not verifier.credentials_valid:
-        pytest.skip(
-            "AWS credentials are not valid. Configure valid credentials to run this test."
-        )
+        pytest.skip("AWS credentials are not valid. Configure valid credentials to run this test.")
         return
 
     try:
@@ -123,9 +113,7 @@ def test_fetch_and_store_discussions(verifier):
     """Test the complete flow of fetching discussions and storing them in DynamoDB."""
     # Skip if AWS credentials are not valid
     if not verifier.credentials_valid:
-        pytest.skip(
-            "AWS credentials are not valid. Configure valid credentials to run this test."
-        )
+        pytest.skip("AWS credentials are not valid. Configure valid credentials to run this test.")
         return
 
     try:
@@ -143,9 +131,7 @@ def test_fetch_and_store_discussions(verifier):
                 or "ResourceNotFoundException" in str(e)
                 or "not exist" in str(e)
             ):
-                pytest.skip(
-                    "Required resources don't exist yet. Skipping end-to-end test."
-                )
+                pytest.skip("Required resources don't exist yet. Skipping end-to-end test.")
                 return
             raise
 
@@ -165,9 +151,7 @@ def test_fetch_and_store_discussions(verifier):
         count = body.get("count", 0)
 
         if count == 0:
-            print(
-                "No discussions were found, which may be expected in test environment"
-            )
+            print("No discussions were found, which may be expected in test environment")
             print(
                 "✅ End-to-end test passed: verified Lambda can be invoked and returns valid response"
             )

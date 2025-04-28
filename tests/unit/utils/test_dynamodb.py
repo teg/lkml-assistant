@@ -11,9 +11,7 @@ import pytest
 from botocore.exceptions import ClientError
 
 # Add project root to Python path
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
-)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
 # Import the DynamoDB utility functions and exceptions
 from src.utils.dynamodb import (
@@ -40,9 +38,7 @@ class TestDynamoDBUtils(unittest.TestCase):
         # Setup mock
         mock_table_instance = MagicMock()
         mock_table.return_value = mock_table_instance
-        mock_table_instance.get_item.return_value = {
-            "Item": {"id": "123", "name": "Test Item"}
-        }
+        mock_table_instance.get_item.return_value = {"Item": {"id": "123", "name": "Test Item"}}
 
         # Execute function
         result = get_item("TestTable", {"id": "123"})
@@ -70,9 +66,7 @@ class TestDynamoDBUtils(unittest.TestCase):
         # Setup mock
         mock_table_instance = MagicMock()
         mock_table.return_value = mock_table_instance
-        mock_table_instance.put_item.return_value = {
-            "ResponseMetadata": {"HTTPStatusCode": 200}
-        }
+        mock_table_instance.put_item.return_value = {"ResponseMetadata": {"HTTPStatusCode": 200}}
 
         # Execute function
         item = {"id": "123", "name": "Test Item"}
@@ -89,9 +83,7 @@ class TestDynamoDBUtils(unittest.TestCase):
         # Setup mock
         mock_table_instance = MagicMock()
         mock_table.return_value = mock_table_instance
-        mock_table_instance.put_item.return_value = {
-            "ResponseMetadata": {"HTTPStatusCode": 200}
-        }
+        mock_table_instance.put_item.return_value = {"ResponseMetadata": {"HTTPStatusCode": 200}}
 
         # Execute function
         item = {"id": "123", "name": "Test Item"}
@@ -145,9 +137,7 @@ class TestDynamoDBUtils(unittest.TestCase):
         # Setup mock
         mock_table_instance = MagicMock()
         mock_table.return_value = mock_table_instance
-        mock_table_instance.delete_item.return_value = {
-            "ResponseMetadata": {"HTTPStatusCode": 200}
-        }
+        mock_table_instance.delete_item.return_value = {"ResponseMetadata": {"HTTPStatusCode": 200}}
 
         # Execute function
         key = {"id": "123"}
@@ -242,9 +232,7 @@ class TestDynamoDBUtils(unittest.TestCase):
 
         # Verify
         mock_boto3_client.assert_called_once_with("dynamodb", region_name="us-east-1")
-        mock_client.transact_write_items.assert_called_once_with(
-            TransactItems=transaction_items
-        )
+        mock_client.transact_write_items.assert_called_once_with(TransactItems=transaction_items)
         self.assertEqual(result, {"ResponseMetadata": {"HTTPStatusCode": 200}})
 
     @patch("src.utils.dynamodb.dynamodb.Table")

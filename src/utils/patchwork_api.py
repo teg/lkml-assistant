@@ -15,9 +15,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # Patchwork API URL
-PATCHWORK_API_URL = (
-    "https://patchwork.kernel.org/api/1.1/projects/rust-for-linux/patches/"
-)
+PATCHWORK_API_URL = "https://patchwork.kernel.org/api/1.1/projects/rust-for-linux/patches/"
 
 
 class PatchworkAPIError(Exception):
@@ -27,18 +25,14 @@ class PatchworkAPIError(Exception):
 
 
 @retry_with_backoff
-def fetch_patches(
-    page: int = 1, per_page: int = 20, order: str = "-date"
-) -> Dict[str, Any]:
+def fetch_patches(page: int = 1, per_page: int = 20, order: str = "-date") -> Dict[str, Any]:
     """
     Fetch patches from the Patchwork API with retries
     """
     url = PATCHWORK_API_URL
     params = {"page": page, "per_page": per_page, "order": order}
 
-    logger.info(
-        f"Fetching patches from Patchwork API: page={page}, per_page={per_page}"
-    )
+    logger.info(f"Fetching patches from Patchwork API: page={page}, per_page={per_page}")
 
     try:
         response = requests.get(url, params=params, timeout=30)

@@ -1,0 +1,64 @@
+Error: no container with name or ID "lkml-assistant-dynamodb-admin" found: no such container
+Error: no container with name or ID "lkml-assistant-localstack" found: no such container
+Error: no container with name or ID "lkml-assistant-dynamodb" found: no such container
+Error: no container with ID or name "lkml-assistant-dynamodb-admin" found: no such container
+Error: no container with ID or name "lkml-assistant-localstack" found: no such container
+Error: no container with ID or name "lkml-assistant-dynamodb" found: no such container
+Error: not all containers could be removed from pod 15ac243b1e4b8d11a3b1bad8cea1ff584a915ec4f7b94b92aee8c09b7783d18c: removing pod containers. 2 errors occurred:
+	* cannot remove container c4f051dbe9d8c19a19d40ef813001187e8e795152499b8f794aaf9180fcbd6fc as it is running - running or paused containers cannot be removed without force: container state improper
+	* a container that depends on container 8ccc22816c88883373e32773dca587dff1f91d104f06d4219158832f09df0a11 still exists: dependency exists
+
+
+Error: "lkml-assistant_default" has associated containers with it. Use -f to forcibly delete containers and pods: network is being used
+Error: something went wrong with the request: "listen tcp :8000: bind: address already in use\n"
+Error: unable to start container "e9178aea7e77f48a065b453eafaecaf56d4fb8e2154d7c36d925e14cbe6d8630": something went wrong with the request: "listen tcp :8000: bind: address already in use\n"
+Resolving "localstack/localstack" using unqualified-search registries (/etc/containers/registries.conf.d/999-podman-machine.conf)
+Trying to pull docker.io/localstack/localstack:latest...
+Getting image source signatures
+Copying blob sha256:127b6d769325688d39cd057f7a3b5595a58c514e79cbc77691a5e09ee4d60834
+Copying blob sha256:b2a4c34219b370a4f4b43d015f255e4c7cfbe59e8ed31f3c76f84199278e0fb1
+Copying blob sha256:67e2e38f574308b54710381fc37a28a5addd050b2c6ed3ebbce9fd0c7b3bf234
+Copying blob sha256:c4a5a5511f6e3abf8b4ac5e4a4396919e0409c4a31014c0c92b9d0b7098458aa
+Copying blob sha256:21e6a5766a787b46543dcbc67bc24d2426cc96b89b49a39cb1584fcfc3ec6ed3
+Copying blob sha256:a7d9a0ac6293889b2e134861072f9099a06d78ca983d7172d7bb8b236008c7c3
+Copying blob sha256:09f10e2739a42a5dc78ac82ceb694aa64e31c2b28dda1e13e0c5952452359029
+Copying blob sha256:8bd6b5d5a862ed67ee69c1f5ee2f23a6c564db7817b00392a0d9ecce1196896d
+Copying blob sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1
+Copying blob sha256:e381c779138ddfd23595ac86cc84bebda597dd032fe636738b7beb64002da38c
+Copying blob sha256:606c932a415036bca9038733842f6504dac664786c11769c0c8e835f5e92a2ad
+Copying blob sha256:47fd59b72620df1a2967b8103969a53e695eaf065285691295ca974295823cc8
+Copying blob sha256:258ef147d819946ccbc8ea86482fc31cbb11d7b7f42bd51dc83d3ee2bf5a2f62
+Copying blob sha256:b07d6e3b2140b10883f7689b3bad02e1b44581b9d3877f2d41b7b57fd6359b44
+Copying blob sha256:0577b7e869e9944aba0721a6ae3ffed0233aaf4000c340df5c2d5101544b6480
+Copying blob sha256:fe952910eeabd7543976a56342de1b2d164d4e29454708ae629c4590c65344bf
+Copying blob sha256:9b0535adac62ce09118c326fb16c569bf455cab7967baa8d76da3fc2a8cb831c
+Copying blob sha256:fd223185397a640d1cc5adcd501ec3f1a27c87b5c9e8a07aa3118cd9f7eccd71
+Copying blob sha256:bebfc7b63b57662f558f6e2b4a0332a6d8349a1a5916b6b269ec13279b632ffb
+Copying blob sha256:3c401ba23327eeae9e2dc82f60ee74720e67b1ce0ab96011653beafbbcdb2796
+Copying blob sha256:d3d46de289130283b0cbd78ee1062cb7550430e71363ab12ffd5a9aa80e7685e
+Copying blob sha256:f7697f5e03b4f8702f4b1035982422be56514c35c0de5e72f08e512cdfd09f8e
+Copying blob sha256:9e4f17971228e973ebdd0214d63ad390a1b724faaf75b5020a5b04fc7de5f760
+Copying blob sha256:483c65f44dbbfa424e5503616e3b44f3378753982243a598f2cc2de1d51fe233
+Copying config sha256:092af2d9448f5ea8b670b56288c67ac5effa4d465ad6ac1a2ee5caf30d995a1e
+Writing manifest to image destination
+fc8eddab37420e9c023766991b4a0b41d4cdb73e5ae6b2f8fac7ef14a7d713a9
+Resolving "aaronshaf/dynamodb-admin" using unqualified-search registries (/etc/containers/registries.conf.d/999-podman-machine.conf)
+Trying to pull docker.io/aaronshaf/dynamodb-admin:latest...
+Getting image source signatures
+Copying blob sha256:9e8b6913d4655ab8ca5f0cded3ffceafc328692d85512b5c4130348a57f6f1da
+Copying blob sha256:582a0a8aa24649c6a7d9ee4dc22d0491151d03ac57a5ec9760d62e1da32087a2
+Copying blob sha256:d87b8d4e1bab34b225cddf45c6fd59ec51ec7a35e8bfd1a71fc540c9795e8efa
+Copying blob sha256:9529e5adcf7a7efeed504fa5d7229eced8284e80c0e63f5e40fd6e410fbd2749
+Copying blob sha256:9986a736f7d3d24bb01b0a560fa0f19c4b57e56c646e1f998941529d28710e6b
+Copying blob sha256:41c72a8c85d617953bb70ceb8410614a0f2f5f4576a523db7de5c34ae1a42ff7
+Copying blob sha256:0ff34f874905cf66fc119a609b540d376f1fc63fd57ac16f3a3da0fb4c43217b
+Copying blob sha256:e80dce4db7dc8b3dbc6042fc06e1afd2e41218624a30dcdefc03ae08de80710b
+Copying blob sha256:16f49234f9af47d0aed14b6dbd66c1e01e1a82d666857605e5bb4786dd0b07d2
+Copying blob sha256:c39e23acc3ceaf51263b7ec8cb259e71f2fea6f15fa0fe092f8bd479953c9ad4
+Copying blob sha256:e4d7f7d9f5c49a2b10f5234a5d848c3c94bbe54790b330a71b512cd3e46e4f1c
+Copying blob sha256:0088637ea30f0a64914951f0d428c3d2f97e94933e98123a6767800e83f9fd5d
+Copying blob sha256:1a1eefab8b4b51b6ae54f4bd9b420bc352a874470264e89f98c7f2ca5e316658
+Copying blob sha256:e0d3b288de7f3a4d441ae9dd3861ef6b5b0c76e72f1083d4d4ef04f0fee8b437
+Copying config sha256:22f7ac76d815d6211b453b71e64df049e5724c9a439821e161ebc1b3b1df6e06
+Writing manifest to image destination
+Error: starting some containers: internal libpod error

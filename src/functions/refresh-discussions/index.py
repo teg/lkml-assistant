@@ -28,9 +28,7 @@ FETCH_DISCUSSIONS_LAMBDA = os.environ.get(
 )
 
 
-def get_recent_patches(
-    days_to_look_back: int = 30, limit: int = 100
-) -> List[Dict[str, Any]]:
+def get_recent_patches(days_to_look_back: int = 30, limit: int = 100) -> List[Dict[str, Any]]:
     """
     Get patches from the last N days
     """
@@ -70,9 +68,7 @@ def refresh_discussions_for_patch(patch_id: str, message_id: str) -> bool:
     Trigger the fetch-discussions Lambda for a patch
     """
     if not message_id:
-        logger.warning(
-            f"No message ID for patch {patch_id}, skipping discussion refresh"
-        )
+        logger.warning(f"No message ID for patch {patch_id}, skipping discussion refresh")
         return False
 
     try:
@@ -91,9 +87,7 @@ def refresh_discussions_for_patch(patch_id: str, message_id: str) -> bool:
 
         status_code = response.get("StatusCode")
         if status_code == 202:  # 202 Accepted
-            logger.info(
-                f"Successfully triggered discussion refresh for patch {patch_id}"
-            )
+            logger.info(f"Successfully triggered discussion refresh for patch {patch_id}")
             return True
         else:
             logger.warning(
@@ -102,9 +96,7 @@ def refresh_discussions_for_patch(patch_id: str, message_id: str) -> bool:
             return False
 
     except Exception as e:
-        logger.error(
-            f"Error triggering discussion refresh for patch {patch_id}: {str(e)}"
-        )
+        logger.error(f"Error triggering discussion refresh for patch {patch_id}: {str(e)}")
         return False
 
 
@@ -113,9 +105,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     Lambda function to refresh discussions for recent patches
     """
     try:
-        logger.info(
-            f"Starting refresh discussions lambda at {datetime.utcnow().isoformat()}"
-        )
+        logger.info(f"Starting refresh discussions lambda at {datetime.utcnow().isoformat()}")
 
         # Get configuration from event or use defaults
         days_to_look_back = event.get("days_to_look_back", 30)

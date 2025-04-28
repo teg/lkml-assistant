@@ -140,10 +140,20 @@ run_all_tests() {
   run_python_unit_tests
   failures=$((failures + $?))
   
-  # Temporarily skip integration tests locally as they need real AWS resources
-  # run_python_integration_tests
-  # failures=$((failures + $?))
-  log_warning "Skipping integration tests as they require AWS resources"
+  # Run direct Lambda tests (needs DynamoDB Local only)
+  log_info "Running direct Lambda invocation tests..."
+  ./scripts/run_direct_lambda_tests.sh
+  direct_lambda_result=$?
+  failures=$((failures + direct_lambda_result))
+
+  if [ $direct_lambda_result -eq 0 ]; then
+    log_success "Direct Lambda invocation tests passed"
+  else
+    log_error "Direct Lambda invocation tests failed"
+  fi
+
+  # Skip AWS integration tests locally as they need real AWS resources
+  log_warning "Skipping AWS integration tests as they require AWS resources"
   
   # Run TypeScript tests
   run_typescript_lint

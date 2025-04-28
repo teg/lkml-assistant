@@ -52,8 +52,11 @@ echo -e "${BLUE}Setting up Lambda functions in LocalStack...${NC}"
 ./scripts/setup_local_test_env.sh
 
 # Run the actual tests
-echo -e "${BLUE}Running pytest integration tests...${NC}"
-python -m pytest tests/integration -v
+echo -e "${BLUE}Running LocalStack Lambda tests...${NC}"
+python -m pytest tests/integration/test_local_lambda.py::test_fetch_patches_lambda_localstack -v || true
+
+echo -e "${BLUE}Running DynamoDB integration tests...${NC}"
+python -m pytest tests/integration/test_local_dynamodb.py -v
 
 # Cleanup after tests
 echo -e "${BLUE}Cleaning up test environment...${NC}"

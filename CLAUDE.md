@@ -68,31 +68,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Keep functions focused on a single responsibility
 - Write unit tests for all new functionality
 
-## Code Formatting and Linting Tools
+## Code Formatting Tools
 
-To ensure consistency in the codebase, use these formatter and linter configurations:
+To ensure consistency in the codebase, use these formatter configurations:
 
 ### Python
 
-- **Formatter**: Use [Black](https://black.readthedocs.io/) with default settings
+- **Formatter**: Use [Black](https://black.readthedocs.io/) with configuration in `pyproject.toml`
   - Command: `black src tests`
-  - Already integrated in `make fmt`
-
-- **Linter**: Use [Flake8](https://flake8.readthedocs.io/) with the following configuration:
-  - Max line length: 100
-  - Ignore: E203 (whitespace before ':'), W503 (line break before binary operator), E501 (line too long)
-  - Command: `flake8 --exclude="*/python/*,*/vendored/*,*/.venv/*" src tests`
   - Already integrated in `make fmt`
 
 ### TypeScript
 
-- **Formatter**: Use [Prettier](https://prettier.io/) with default settings
+- **Formatter**: Use [Prettier](https://prettier.io/) with configuration in `.prettierrc`
   - Command: `npm run format` (in the infra directory)
-  - Already integrated in `make fmt`
-
-- **Linter**: Use [ESLint](https://eslint.org/) with the TypeScript plugin
-  - Configuration file: `/infra/.eslintrc.js`
-  - Command: `npm run lint` (in the infra directory)
   - Already integrated in `make fmt`
 
 ### Autoformatting Approach

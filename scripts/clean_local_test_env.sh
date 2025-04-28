@@ -33,10 +33,10 @@ aws lambda delete-function --endpoint-url http://localhost:4566 --function-name 
 echo -e "${BLUE}Cleaning up temporary files...${NC}"
 rm -rf .tmp/lambda || true
 
-# Stop Docker containers (optional - you might want to keep them running for multiple test runs)
+# Stop Podman containers (optional - you might want to keep them running for multiple test runs)
 if [ "$1" = "--stop-containers" ]; then
-    echo -e "${BLUE}Stopping Docker containers...${NC}"
-    docker-compose down
+    echo -e "${BLUE}Stopping Podman containers...${NC}"
+    podman stop lkml-assistant-dynamodb && podman rm lkml-assistant-dynamodb || true
 fi
 
 echo -e "${GREEN}Local test environment has been cleaned up!${NC}"

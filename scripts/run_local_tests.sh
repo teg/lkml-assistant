@@ -18,9 +18,9 @@ if [ -f docker-compose.log ]; then
     ./scripts/clean_local_test_env.sh --stop-containers || true
 fi
 
-# Start the Docker containers and set up test environment
-echo -e "${BLUE}Starting Docker containers for testing...${NC}"
-docker-compose up -d > docker-compose.log 2>&1
+# Start the Podman containers and set up test environment
+echo -e "${BLUE}Starting Podman containers for testing...${NC}"
+./scripts/setup_local_test_env.sh > podman.log 2>&1
 
 # Wait for the containers to be ready
 echo -e "${BLUE}Waiting for containers to be ready...${NC}"

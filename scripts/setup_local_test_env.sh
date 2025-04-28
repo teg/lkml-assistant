@@ -12,15 +12,15 @@ NC='\033[0m' # No Color
 
 echo -e "${BLUE}Setting up local test environment for LKML Assistant...${NC}"
 
-# Check for Docker and Docker Compose
-if ! command -v docker &> /dev/null; then
-    echo -e "${RED}Error: Docker is not installed. Please install Docker first.${NC}"
+# Check for Podman 
+if ! command -v podman &> /dev/null; then
+    echo -e "${RED}Error: Podman is not installed. Please install Podman first.${NC}"
     exit 1
 fi
 
-# Start the local services (DynamoDB, LocalStack, DynamoDB Admin)
-echo -e "${BLUE}Starting local AWS services with docker-compose...${NC}"
-docker-compose up -d
+# Start the local services (DynamoDB only for simplicity)
+echo -e "${BLUE}Starting local AWS services with Podman...${NC}"
+podman run -d --name lkml-assistant-dynamodb -p 8000:8000 amazon/dynamodb-local:latest -jar DynamoDBLocal.jar -sharedDb -inMemory
 
 # Wait for services to be ready
 echo -e "${BLUE}Waiting for services to be ready...${NC}"

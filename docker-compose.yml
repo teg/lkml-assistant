@@ -1,14 +1,10 @@
-version: '3.8'
-
 services:
   dynamodb-local:
     image: amazon/dynamodb-local:latest
     container_name: lkml-assistant-dynamodb
     ports:
       - "8000:8000"
-    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal/data"
-    volumes:
-      - "./docker/dynamodb:/home/dynamodblocal/data"
+    command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
     working_dir: /home/dynamodblocal
 
   localstack:
@@ -20,9 +16,7 @@ services:
       - SERVICES=lambda,sqs,events,logs,cloudwatch
       - DEBUG=1
       - DATA_DIR=/tmp/localstack/data
-    volumes:
-      - "./docker/localstack:/tmp/localstack"
-      - "/var/run/docker.sock:/var/run/docker.sock"
+    # Remove the Docker socket volume which may cause issues with Podman
 
   dynamodb-admin:
     image: aaronshaf/dynamodb-admin:latest

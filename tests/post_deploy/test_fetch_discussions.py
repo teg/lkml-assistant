@@ -1,7 +1,7 @@
 """
-Post-Deployment Tests for Fetch Patches Lambda
+Post-Deployment Tests for Fetch Discussions Lambda
 
-These tests verify that the deployed Fetch Patches Lambda function
+These tests verify that the deployed Fetch Discussions Lambda function
 works correctly in the target environment.
 """
 
@@ -23,8 +23,8 @@ def verifier():
     return DeploymentVerifier(environment=ENVIRONMENT, profile=aws_profile)
 
 
-def test_fetch_patches_lambda_exists(verifier):
-    """Test that the fetch-patches Lambda function exists."""
+def test_fetch_discussions_lambda_exists(verifier):
+    """Test that the fetch-discussions Lambda function exists."""
     # Skip if AWS credentials are not valid
     if not verifier.credentials_valid:
         pytest.skip(
@@ -34,7 +34,7 @@ def test_fetch_patches_lambda_exists(verifier):
 
     # Get Lambda function details
     try:
-        function_name = f"LkmlAssistant-FetchPatches-{ENVIRONMENT}"
+        function_name = f"LkmlAssistant-FetchDiscussions-{ENVIRONMENT}"
         response = verifier.lambda_client.get_function(FunctionName=function_name)
 
         # Check that the function exists and is active
@@ -52,8 +52,8 @@ def test_fetch_patches_lambda_exists(verifier):
             pytest.fail(f"Error checking Lambda function: {str(e)}")
 
 
-def test_fetch_patches_smoke_test(verifier):
-    """Run a smoke test for the fetch-patches Lambda function."""
+def test_fetch_discussions_smoke_test(verifier):
+    """Run a smoke test for the fetch-discussions Lambda function."""
     # Skip if AWS credentials are not valid
     if not verifier.credentials_valid:
         pytest.skip(
@@ -63,14 +63,14 @@ def test_fetch_patches_smoke_test(verifier):
 
     try:
         # First check if the function exists
-        function_name = f"LkmlAssistant-FetchPatches-{ENVIRONMENT}"
+        function_name = f"LkmlAssistant-FetchDiscussions-{ENVIRONMENT}"
         verifier.lambda_client.get_function(FunctionName=function_name)
 
         # Generate test payload
-        payload = TestPayloads.fetch_patches_payload(limit=2)
+        payload = TestPayloads.fetch_discussions_payload()
 
         # Run the smoke test
-        success, response = verifier.run_smoke_test("FetchPatches", payload)
+        success, response = verifier.run_smoke_test("FetchDiscussions", payload)
 
         # Verify the response
         assert success, f"Smoke test failed: {response}"
@@ -81,26 +81,25 @@ def test_fetch_patches_smoke_test(verifier):
         if isinstance(body, str):
             body = json.loads(body)
 
-        # Verify the response structure - an empty result is fine in test environment
+        # Verify the response structure
         print(f"Response body: {body}")
-        if "patches" not in body:
-            # It's okay if there are no patches, since this is a test environment
-            assert "message" in body, "Response should have a message"
-            assert "count" in body, "Response should have a count field"
+        assert "message" in body, "Response should have a message"
+        assert "count" in body, "Response should have a count field"
+        assert "patch_id" in body, "Response should have a patch_id field"
 
-        print("✅ Fetch patches smoke test passed")
+        print("✅ Fetch discussions smoke test passed")
     except Exception as e:
         # Check if the error is because the function doesn't exist
         if "Function not found" in str(e):
             pytest.skip(
-                "Lambda function FetchPatches does not exist yet. Skipping test."
+                "Lambda function FetchDiscussions does not exist yet. Skipping test."
             )
         else:
             pytest.fail(f"Error in smoke test: {str(e)}")
 
 
-def test_patches_table_exists(verifier):
-    """Test that the Patches DynamoDB table exists and is active."""
+def test_discussions_table_exists(verifier):
+    """Test that the Discussions DynamoDB table exists and is active."""
     # Skip if AWS credentials are not valid
     if not verifier.credentials_valid:
         pytest.skip(
@@ -110,18 +109,18 @@ def test_patches_table_exists(verifier):
 
     try:
         # Verify the table exists
-        result = verifier.verify_dynamodb_table("Patches")
-        assert result, "Patches table does not exist or is not active"
-        print("✅ Patches DynamoDB table exists and is active")
+        result = verifier.verify_dynamodb_table("Discussions")
+        assert result, "Discussions table does not exist or is not active"
+        print("✅ Discussions DynamoDB table exists and is active")
     except Exception as e:
         if "ResourceNotFoundException" in str(e) or "not exist" in str(e):
-            pytest.skip("Patches DynamoDB table does not exist yet. Skipping test.")
+            pytest.skip("Discussions DynamoDB table does not exist yet. Skipping test.")
         else:
             pytest.fail(f"Error checking DynamoDB table: {str(e)}")
 
 
-def test_fetch_and_store(verifier):
-    """Test the complete flow of fetching patches and storing them in DynamoDB."""
+def test_fetch_and_store_discussions(verifier):
+    """Test the complete flow of fetching discussions and storing them in DynamoDB."""
     # Skip if AWS credentials are not valid
     if not verifier.credentials_valid:
         pytest.skip(
@@ -131,8 +130,8 @@ def test_fetch_and_store(verifier):
 
     try:
         # First check if both the function and table exist
-        function_name = f"LkmlAssistant-FetchPatches-{ENVIRONMENT}"
-        table_name = f"LkmlAssistant-Patches-{ENVIRONMENT}"
+        function_name = f"LkmlAssistant-FetchDiscussions-{ENVIRONMENT}"
+        table_name = f"LkmlAssistant-Discussions-{ENVIRONMENT}"
 
         try:
             verifier.lambda_client.get_function(FunctionName=function_name)
@@ -150,38 +149,48 @@ def test_fetch_and_store(verifier):
                 return
             raise
 
-        # Invoke the Lambda to fetch patches
-        payload = TestPayloads.fetch_patches_payload(limit=1)
-        response = verifier.invoke_lambda("FetchPatches", payload)
+        # Get test data
+        payload = TestPayloads.fetch_discussions_payload()
+        patch_id = payload["patch_id"]
 
-        # Parse the response to get a patch ID
+        # Invoke the Lambda to fetch discussions
+        response = verifier.invoke_lambda("FetchDiscussions", payload)
+
+        # Parse the response
         body = response["body"]
         if isinstance(body, str):
             body = json.loads(body)
 
-        patches = body.get("patches", [])
-        if len(patches) == 0:
-            print("No patches were returned, which is expected in test environment")
+        # Get the count of discussions
+        count = body.get("count", 0)
+
+        if count == 0:
+            print(
+                "No discussions were found, which may be expected in test environment"
+            )
             print(
                 "✅ End-to-end test passed: verified Lambda can be invoked and returns valid response"
             )
             return
 
-        # If we have patches, verify they were stored in DynamoDB
-        patch_id = patches[0].get("id")
-        assert patch_id, "Patch missing ID"
-
-        # Now check if the patch exists in DynamoDB
+        # Query DynamoDB to verify discussions were stored
         table = verifier.dynamodb.Table(table_name)
 
-        response = table.get_item(Key={"id": patch_id})
-        item = response.get("Item")
+        # Use the GSI to query discussions for this patch
+        # This assumes the GSI structure from the Lambda implementation
+        response = table.query(
+            IndexName="GSI1",
+            KeyConditionExpression="gsi1pk = :pk",
+            ExpressionAttributeValues={":pk": f"PATCH#{patch_id}"},
+            Limit=10,
+        )
 
-        assert item, f"Patch {patch_id} not found in DynamoDB"
-        assert item["id"] == patch_id, "Patch ID mismatch"
+        # Verify discussions exist in the table
+        items = response.get("Items", [])
+        assert len(items) > 0, f"No discussions found in DynamoDB for patch {patch_id}"
 
         print(
-            f"✅ End-to-end test passed: Patch {patch_id} successfully stored in DynamoDB"
+            f"✅ End-to-end test passed: {len(items)} discussions for patch {patch_id} stored in DynamoDB"
         )
     except Exception as e:
         if (

@@ -27,7 +27,7 @@ if dynamodb_endpoint:
         endpoint_url=dynamodb_endpoint,
         region_name=region,
         aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID", "test"),
-        aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY", "test")
+        aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY", "test"),
     )
 else:
     # For production use in AWS
@@ -248,7 +248,7 @@ def transaction_write_items(transaction_items: List[Dict[str, Any]]) -> Dict[str
             endpoint_url=dynamodb_endpoint,
             region_name=region,
             aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID", "test"),
-            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY", "test")
+            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY", "test"),
         )
     else:
         dynamodb_client = boto3.client("dynamodb", region_name=region)
@@ -269,7 +269,7 @@ def transaction_get_items(transaction_items: List[Dict[str, Any]]) -> Dict[str, 
             endpoint_url=dynamodb_endpoint,
             region_name=region,
             aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID", "test"),
-            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY", "test")
+            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY", "test"),
         )
     else:
         dynamodb_client = boto3.client("dynamodb", region_name=region)

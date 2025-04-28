@@ -109,7 +109,9 @@ def create_patch_record(patch_data: Dict[str, Any]) -> Dict[str, Any]:
     return patch_item
 
 
-def get_patches(page: int = 1, per_page: int = 20, event: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+def get_patches(
+    page: int = 1, per_page: int = 20, event: Dict[str, Any] = None
+) -> List[Dict[str, Any]]:
     """
     Get patches from Patchwork API with pagination and retry
     """

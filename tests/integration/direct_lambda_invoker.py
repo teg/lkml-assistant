@@ -2,6 +2,7 @@
 Test helper to invoke Lambda functions directly without using AWS Lambda.
 This bypasses the need for LocalStack by directly calling the handler functions.
 """
+
 import os
 import sys
 import json
@@ -16,11 +17,14 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 
 class MockLambdaContext:
     """Mock Lambda context for testing"""
+
     def __init__(self, function_name="test-function"):
         self.function_name = function_name
         self.function_version = "$LATEST"
         self.memory_limit_in_mb = 128
-        self.invoked_function_arn = f"arn:aws:lambda:us-east-1:123456789012:function:{function_name}"
+        self.invoked_function_arn = (
+            f"arn:aws:lambda:us-east-1:123456789012:function:{function_name}"
+        )
         self.aws_request_id = "00000000-0000-0000-0000-000000000000"
 
 
@@ -83,7 +87,7 @@ def invoke_fetch_patches_lambda(event, context=None):
                 "endpoint_url": "http://localhost:8000",
                 "region_name": "us-east-1",
                 "aws_access_key_id": "test",
-                "aws_secret_access_key": "test"
+                "aws_secret_access_key": "test",
             }
             # Only add other kwargs that don't conflict
             for k, v in kwargs.items():
@@ -102,7 +106,7 @@ def invoke_fetch_patches_lambda(event, context=None):
                 "endpoint_url": "http://localhost:8000",
                 "region_name": "us-east-1",
                 "aws_access_key_id": "test",
-                "aws_secret_access_key": "test"
+                "aws_secret_access_key": "test",
             }
             # Only add other kwargs that don't conflict
             for k, v in kwargs.items():
@@ -119,6 +123,7 @@ def invoke_fetch_patches_lambda(event, context=None):
     try:
         # Load and execute the Lambda function
         from src.functions.fetch_patches import index
+
         result = index.handler(event, context)
         return result
     finally:
@@ -133,20 +138,22 @@ def create_test_event(test_data=None):
     """
     if test_data is None:
         # Default test data
-        test_data = [{
-            "id": 98765,
-            "name": "Test patch from Lambda",
-            "submitter": {
-                "id": 12345,
-                "name": "Test User",
-                "email": "test@example.com"
-            },
-            "date": datetime.utcnow().isoformat(),
-            "web_url": "https://example.com/test",
-            "mbox": "https://example.com/test.mbox",
-            "msgid": "test-msgid@example.com",
-            "content": "Test content from Lambda"
-        }]
+        test_data = [
+            {
+                "id": 98765,
+                "name": "Test patch from Lambda",
+                "submitter": {
+                    "id": 12345,
+                    "name": "Test User",
+                    "email": "test@example.com",
+                },
+                "date": datetime.utcnow().isoformat(),
+                "web_url": "https://example.com/test",
+                "mbox": "https://example.com/test.mbox",
+                "msgid": "test-msgid@example.com",
+                "content": "Test content from Lambda",
+            }
+        ]
 
     return {
         "page": 1,
@@ -154,5 +161,5 @@ def create_test_event(test_data=None):
         "process_all_pages": False,
         "fetch_discussions": False,
         "test_mode": True,
-        "test_data": test_data
+        "test_data": test_data,
     }

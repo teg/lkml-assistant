@@ -1,6 +1,7 @@
 """
 Special handler for test mode to mock Patchwork API responses
 """
+
 import json
 import logging
 from datetime import datetime
@@ -21,6 +22,4 @@ def process_test_data(event: Dict[str, Any]):
     test_data = event.get("test_data", [])
 
     # Return the test data as the "API response"
-    return {
-        "results": test_data
-    }
+    return {"results": test_data}

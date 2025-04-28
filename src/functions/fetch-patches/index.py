@@ -102,7 +102,9 @@ def create_patch_record(patch_data: Dict[str, Any]) -> Dict[str, Any]:
     return patch_item
 
 
-def get_patches(page: int = 1, per_page: int = 20, event: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+def get_patches(
+    page: int = 1, per_page: int = 20, event: Dict[str, Any] = None
+) -> List[Dict[str, Any]]:
     """
     Get patches from Patchwork API with pagination and retry
     """
@@ -111,6 +113,7 @@ def get_patches(page: int = 1, per_page: int = 20, event: Dict[str, Any] = None)
         try:
             # Import the test mode handler dynamically to avoid import errors in production
             from . import test_mode_handler
+
             data = test_mode_handler.process_test_data(event)
             return data.get("results", [])
         except Exception as e:

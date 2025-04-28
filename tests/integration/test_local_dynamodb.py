@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 from decimal import Decimal
 import os
+
 # We're working directly with DynamoDB here to avoid auth issues with Podman
 
 # Utility functions for DynamoDB format conversion
@@ -14,16 +15,16 @@ def to_dynamodb_item(python_dict):
     item = {}
     for key, value in python_dict.items():
         if isinstance(value, str):
-            item[key] = {'S': value}
+            item[key] = {"S": value}
         elif isinstance(value, int):
-            item[key] = {'N': str(value)}
+            item[key] = {"N": str(value)}
         elif isinstance(value, float):
-            item[key] = {'N': str(value)}
+            item[key] = {"N": str(value)}
         elif isinstance(value, dict):
             # Skip nested dicts for simplicity in this test
             continue
         elif value is None:
-            item[key] = {'NULL': True}
+            item[key] = {"NULL": True}
     return item
 
 
@@ -31,11 +32,11 @@ def from_dynamodb_item(dynamodb_item):
     """Convert a DynamoDB item to Python dictionary."""
     python_dict = {}
     for key, value in dynamodb_item.items():
-        if 'S' in value:
-            python_dict[key] = value['S']
-        elif 'N' in value:
-            python_dict[key] = Decimal(value['N'])
-        elif 'NULL' in value:
+        if "S" in value:
+            python_dict[key] = value["S"]
+        elif "N" in value:
+            python_dict[key] = Decimal(value["N"])
+        elif "NULL" in value:
             python_dict[key] = None
     return python_dict
 
@@ -48,18 +49,14 @@ def test_save_and_get_patch(dynamodb_client, patches_table, sample_patch_data):
     item = to_dynamodb_item(sample_patch_data)
 
     # Save the patch directly to DynamoDB
-    dynamodb_client.put_item(
-        TableName=patches_table,
-        Item=item
-    )
+    dynamodb_client.put_item(TableName=patches_table, Item=item)
 
     # Retrieve the patch
     response = dynamodb_client.get_item(
-        TableName=patches_table,
-        Key={'id': {'S': sample_patch_data["id"]}}
+        TableName=patches_table, Key={"id": {"S": sample_patch_data["id"]}}
     )
 
-    item = response.get('Item', {})
+    item = response.get("Item", {})
 
     # Convert DynamoDB format back to Python using the helper function
     patch = from_dynamodb_item(item)
@@ -72,7 +69,13 @@ def test_save_and_get_patch(dynamodb_client, patches_table, sample_patch_data):
     assert patch["status"] == sample_patch_data["status"]
 
 
-def test_save_and_get_discussion(dynamodb_client, discussions_table, patches_table, sample_patch_data, sample_discussion_data):
+def test_save_and_get_discussion(
+    dynamodb_client,
+    discussions_table,
+    patches_table,
+    sample_patch_data,
+    sample_discussion_data,
+):
     """
     Test saving and retrieving a discussion in the local DynamoDB using the client directly.
     """
@@ -80,16 +83,16 @@ def test_save_and_get_discussion(dynamodb_client, discussions_table, patches_tab
     patch_item = {}
     for key, value in sample_patch_data.items():
         if isinstance(value, str):
-            patch_item[key] = {'S': value}
+            patch_item[key] = {"S": value}
         elif isinstance(value, int):
-            patch_item[key] = {'N': str(value)}
+            patch_item[key] = {"N": str(value)}
         elif isinstance(value, float):
-            patch_item[key] = {'N': str(value)}
+            patch_item[key] = {"N": str(value)}
         elif isinstance(value, dict):
             # Skip nested dicts for simplicity in this test
             continue
         elif value is None:
-            patch_item[key] = {'NULL': True}
+            patch_item[key] = {"NULL": True}
 
     # Save the patch directly to DynamoDB
     dynamodb_client.put_item(TableName=patches_table, Item=patch_item)
@@ -98,16 +101,16 @@ def test_save_and_get_discussion(dynamodb_client, discussions_table, patches_tab
     discussion_item = {}
     for key, value in sample_discussion_data.items():
         if isinstance(value, str):
-            discussion_item[key] = {'S': value}
+            discussion_item[key] = {"S": value}
         elif isinstance(value, int):
-            discussion_item[key] = {'N': str(value)}
+            discussion_item[key] = {"N": str(value)}
         elif isinstance(value, float):
-            discussion_item[key] = {'N': str(value)}
+            discussion_item[key] = {"N": str(value)}
         elif isinstance(value, dict):
             # Skip nested dicts for simplicity in this test
             continue
         elif value is None:
-            discussion_item[key] = {'NULL': True}
+            discussion_item[key] = {"NULL": True}
 
     # Save the discussion directly to DynamoDB
     dynamodb_client.put_item(TableName=discussions_table, Item=discussion_item)
@@ -116,21 +119,21 @@ def test_save_and_get_discussion(dynamodb_client, discussions_table, patches_tab
     response = dynamodb_client.get_item(
         TableName=discussions_table,
         Key={
-            'id': {'S': sample_discussion_data["id"]},
-            'timestamp': {'S': sample_discussion_data["timestamp"]}
-        }
+            "id": {"S": sample_discussion_data["id"]},
+            "timestamp": {"S": sample_discussion_data["timestamp"]},
+        },
     )
 
-    item = response.get('Item', {})
+    item = response.get("Item", {})
 
     # Convert DynamoDB format back to Python
     discussion = {}
     for key, value in item.items():
-        if 'S' in value:
-            discussion[key] = value['S']
-        elif 'N' in value:
-            discussion[key] = Decimal(value['N'])
-        elif 'NULL' in value:
+        if "S" in value:
+            discussion[key] = value["S"]
+        elif "N" in value:
+            discussion[key] = Decimal(value["N"])
+        elif "NULL" in value:
             discussion[key] = None
 
     # Verify the discussion data
@@ -149,16 +152,16 @@ def test_query_patches_by_status(dynamodb_client, patches_table, sample_patch_da
     item = {}
     for key, value in sample_patch_data.items():
         if isinstance(value, str):
-            item[key] = {'S': value}
+            item[key] = {"S": value}
         elif isinstance(value, int):
-            item[key] = {'N': str(value)}
+            item[key] = {"N": str(value)}
         elif isinstance(value, float):
-            item[key] = {'N': str(value)}
+            item[key] = {"N": str(value)}
         elif isinstance(value, dict):
             # Skip nested dicts for simplicity in this test
             continue
         elif value is None:
-            item[key] = {'NULL': True}
+            item[key] = {"NULL": True}
 
     # Save the patch directly to DynamoDB
     dynamodb_client.put_item(TableName=patches_table, Item=item)
@@ -166,27 +169,23 @@ def test_query_patches_by_status(dynamodb_client, patches_table, sample_patch_da
     # Query patches by status index
     response = dynamodb_client.query(
         TableName=patches_table,
-        IndexName='StatusIndex',
-        KeyConditionExpression='#gsi3pk = :gsi3pk',
-        ExpressionAttributeNames={
-            '#gsi3pk': 'gsi3pk'
-        },
-        ExpressionAttributeValues={
-            ':gsi3pk': {'S': 'STATUS#NEW'}
-        },
-        Limit=10
+        IndexName="StatusIndex",
+        KeyConditionExpression="#gsi3pk = :gsi3pk",
+        ExpressionAttributeNames={"#gsi3pk": "gsi3pk"},
+        ExpressionAttributeValues={":gsi3pk": {"S": "STATUS#NEW"}},
+        Limit=10,
     )
 
     # Convert DynamoDB format back to Python
     patches = []
-    for item in response.get('Items', []):
+    for item in response.get("Items", []):
         patch = {}
         for key, value in item.items():
-            if 'S' in value:
-                patch[key] = value['S']
-            elif 'N' in value:
-                patch[key] = Decimal(value['N'])
-            elif 'NULL' in value:
+            if "S" in value:
+                patch[key] = value["S"]
+            elif "N" in value:
+                patch[key] = Decimal(value["N"])
+            elif "NULL" in value:
                 patch[key] = None
         patches.append(patch)
 
@@ -195,7 +194,13 @@ def test_query_patches_by_status(dynamodb_client, patches_table, sample_patch_da
     assert any(p["id"] == sample_patch_data["id"] for p in patches)
 
 
-def test_query_discussions_by_patch(dynamodb_client, discussions_table, patches_table, sample_patch_data, sample_discussion_data):
+def test_query_discussions_by_patch(
+    dynamodb_client,
+    discussions_table,
+    patches_table,
+    sample_patch_data,
+    sample_discussion_data,
+):
     """
     Test querying discussions for a specific patch using the client directly.
     """
@@ -203,16 +208,16 @@ def test_query_discussions_by_patch(dynamodb_client, discussions_table, patches_
     patch_item = {}
     for key, value in sample_patch_data.items():
         if isinstance(value, str):
-            patch_item[key] = {'S': value}
+            patch_item[key] = {"S": value}
         elif isinstance(value, int):
-            patch_item[key] = {'N': str(value)}
+            patch_item[key] = {"N": str(value)}
         elif isinstance(value, float):
-            patch_item[key] = {'N': str(value)}
+            patch_item[key] = {"N": str(value)}
         elif isinstance(value, dict):
             # Skip nested dicts for simplicity in this test
             continue
         elif value is None:
-            patch_item[key] = {'NULL': True}
+            patch_item[key] = {"NULL": True}
 
     # Save the patch directly to DynamoDB
     dynamodb_client.put_item(TableName=patches_table, Item=patch_item)
@@ -221,16 +226,16 @@ def test_query_discussions_by_patch(dynamodb_client, discussions_table, patches_
     discussion_item = {}
     for key, value in sample_discussion_data.items():
         if isinstance(value, str):
-            discussion_item[key] = {'S': value}
+            discussion_item[key] = {"S": value}
         elif isinstance(value, int):
-            discussion_item[key] = {'N': str(value)}
+            discussion_item[key] = {"N": str(value)}
         elif isinstance(value, float):
-            discussion_item[key] = {'N': str(value)}
+            discussion_item[key] = {"N": str(value)}
         elif isinstance(value, dict):
             # Skip nested dicts for simplicity in this test
             continue
         elif value is None:
-            discussion_item[key] = {'NULL': True}
+            discussion_item[key] = {"NULL": True}
 
     # Save the discussion directly to DynamoDB
     dynamodb_client.put_item(TableName=discussions_table, Item=discussion_item)
@@ -238,26 +243,24 @@ def test_query_discussions_by_patch(dynamodb_client, discussions_table, patches_
     # Query discussions for the patch using the PatchIndex
     response = dynamodb_client.query(
         TableName=discussions_table,
-        IndexName='PatchIndex',
-        KeyConditionExpression='#gsi1pk = :gsi1pk',
-        ExpressionAttributeNames={
-            '#gsi1pk': 'gsi1pk'
-        },
+        IndexName="PatchIndex",
+        KeyConditionExpression="#gsi1pk = :gsi1pk",
+        ExpressionAttributeNames={"#gsi1pk": "gsi1pk"},
         ExpressionAttributeValues={
-            ':gsi1pk': {'S': f'PATCH#{sample_patch_data["id"]}'}
-        }
+            ":gsi1pk": {"S": f'PATCH#{sample_patch_data["id"]}'}
+        },
     )
 
     # Convert DynamoDB format back to Python
     discussions = []
-    for item in response.get('Items', []):
+    for item in response.get("Items", []):
         discussion = {}
         for key, value in item.items():
-            if 'S' in value:
-                discussion[key] = value['S']
-            elif 'N' in value:
-                discussion[key] = Decimal(value['N'])
-            elif 'NULL' in value:
+            if "S" in value:
+                discussion[key] = value["S"]
+            elif "N" in value:
+                discussion[key] = Decimal(value["N"])
+            elif "NULL" in value:
                 discussion[key] = None
         discussions.append(discussion)
 
@@ -274,55 +277,48 @@ def test_update_patch_status(dynamodb_client, patches_table, sample_patch_data):
     item = {}
     for key, value in sample_patch_data.items():
         if isinstance(value, str):
-            item[key] = {'S': value}
+            item[key] = {"S": value}
         elif isinstance(value, int):
-            item[key] = {'N': str(value)}
+            item[key] = {"N": str(value)}
         elif isinstance(value, float):
-            item[key] = {'N': str(value)}
+            item[key] = {"N": str(value)}
         elif isinstance(value, dict):
             # Skip nested dicts for simplicity in this test
             continue
         elif value is None:
-            item[key] = {'NULL': True}
+            item[key] = {"NULL": True}
 
     # Save the patch directly to DynamoDB
-    dynamodb_client.put_item(
-        TableName=patches_table,
-        Item=item
-    )
+    dynamodb_client.put_item(TableName=patches_table, Item=item)
 
     # Update the patch status
     new_status = "ACCEPTED"
     dynamodb_client.update_item(
         TableName=patches_table,
-        Key={'id': {'S': sample_patch_data["id"]}},
+        Key={"id": {"S": sample_patch_data["id"]}},
         UpdateExpression="SET #status = :status, #gsi3pk = :gsi3pk",
-        ExpressionAttributeNames={
-            "#status": "status",
-            "#gsi3pk": "gsi3pk"
-        },
+        ExpressionAttributeNames={"#status": "status", "#gsi3pk": "gsi3pk"},
         ExpressionAttributeValues={
             ":status": {"S": new_status},
-            ":gsi3pk": {"S": f"STATUS#{new_status}"}
-        }
+            ":gsi3pk": {"S": f"STATUS#{new_status}"},
+        },
     )
 
     # Get the updated patch
     response = dynamodb_client.get_item(
-        TableName=patches_table,
-        Key={'id': {'S': sample_patch_data["id"]}}
+        TableName=patches_table, Key={"id": {"S": sample_patch_data["id"]}}
     )
 
-    item = response.get('Item', {})
+    item = response.get("Item", {})
 
     # Convert DynamoDB format back to Python
     updated_patch = {}
     for key, value in item.items():
-        if 'S' in value:
-            updated_patch[key] = value['S']
-        elif 'N' in value:
-            updated_patch[key] = Decimal(value['N'])
-        elif 'NULL' in value:
+        if "S" in value:
+            updated_patch[key] = value["S"]
+        elif "N" in value:
+            updated_patch[key] = Decimal(value["N"])
+        elif "NULL" in value:
             updated_patch[key] = None
 
     # Verify the status was updated
@@ -330,7 +326,13 @@ def test_update_patch_status(dynamodb_client, patches_table, sample_patch_data):
     assert updated_patch["gsi3pk"] == f"STATUS#{new_status}"
 
 
-def test_count_discussions_by_patch(dynamodb_client, discussions_table, patches_table, sample_patch_data, sample_discussion_data):
+def test_count_discussions_by_patch(
+    dynamodb_client,
+    discussions_table,
+    patches_table,
+    sample_patch_data,
+    sample_discussion_data,
+):
     """
     Test counting discussions for a patch using the client directly.
     """
@@ -338,16 +340,16 @@ def test_count_discussions_by_patch(dynamodb_client, discussions_table, patches_
     patch_item = {}
     for key, value in sample_patch_data.items():
         if isinstance(value, str):
-            patch_item[key] = {'S': value}
+            patch_item[key] = {"S": value}
         elif isinstance(value, int):
-            patch_item[key] = {'N': str(value)}
+            patch_item[key] = {"N": str(value)}
         elif isinstance(value, float):
-            patch_item[key] = {'N': str(value)}
+            patch_item[key] = {"N": str(value)}
         elif isinstance(value, dict):
             # Skip nested dicts for simplicity in this test
             continue
         elif value is None:
-            patch_item[key] = {'NULL': True}
+            patch_item[key] = {"NULL": True}
 
     # Save the patch directly to DynamoDB
     dynamodb_client.put_item(TableName=patches_table, Item=patch_item)
@@ -356,16 +358,16 @@ def test_count_discussions_by_patch(dynamodb_client, discussions_table, patches_
     discussion_item = {}
     for key, value in sample_discussion_data.items():
         if isinstance(value, str):
-            discussion_item[key] = {'S': value}
+            discussion_item[key] = {"S": value}
         elif isinstance(value, int):
-            discussion_item[key] = {'N': str(value)}
+            discussion_item[key] = {"N": str(value)}
         elif isinstance(value, float):
-            discussion_item[key] = {'N': str(value)}
+            discussion_item[key] = {"N": str(value)}
         elif isinstance(value, dict):
             # Skip nested dicts for simplicity in this test
             continue
         elif value is None:
-            discussion_item[key] = {'NULL': True}
+            discussion_item[key] = {"NULL": True}
 
     # Save the discussion directly to DynamoDB
     dynamodb_client.put_item(TableName=discussions_table, Item=discussion_item)
@@ -379,16 +381,16 @@ def test_count_discussions_by_patch(dynamodb_client, discussions_table, patches_
     second_discussion_item = {}
     for key, value in second_discussion.items():
         if isinstance(value, str):
-            second_discussion_item[key] = {'S': value}
+            second_discussion_item[key] = {"S": value}
         elif isinstance(value, int):
-            second_discussion_item[key] = {'N': str(value)}
+            second_discussion_item[key] = {"N": str(value)}
         elif isinstance(value, float):
-            second_discussion_item[key] = {'N': str(value)}
+            second_discussion_item[key] = {"N": str(value)}
         elif isinstance(value, dict):
             # Skip nested dicts for simplicity in this test
             continue
         elif value is None:
-            second_discussion_item[key] = {'NULL': True}
+            second_discussion_item[key] = {"NULL": True}
 
     # Save the second discussion directly to DynamoDB
     dynamodb_client.put_item(TableName=discussions_table, Item=second_discussion_item)
@@ -396,19 +398,17 @@ def test_count_discussions_by_patch(dynamodb_client, discussions_table, patches_
     # Count discussions for the patch using the PatchIndex
     response = dynamodb_client.query(
         TableName=discussions_table,
-        IndexName='PatchIndex',
-        KeyConditionExpression='#gsi1pk = :gsi1pk',
-        ExpressionAttributeNames={
-            '#gsi1pk': 'gsi1pk'
-        },
+        IndexName="PatchIndex",
+        KeyConditionExpression="#gsi1pk = :gsi1pk",
+        ExpressionAttributeNames={"#gsi1pk": "gsi1pk"},
         ExpressionAttributeValues={
-            ':gsi1pk': {'S': f'PATCH#{sample_patch_data["id"]}'}
+            ":gsi1pk": {"S": f'PATCH#{sample_patch_data["id"]}'}
         },
-        Select='COUNT'
+        Select="COUNT",
     )
 
     # Get the count from the response
-    count = response.get('Count', 0)
+    count = response.get("Count", 0)
 
     # Verify count
     assert count == 2

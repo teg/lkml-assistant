@@ -18,7 +18,6 @@ os.environ["LOG_LEVEL"] = "DEBUG"
 
 @pytest.fixture(scope="session")
 
-
 def setup_local_env():
     """
     Set up the local test environment before tests and clean up afterwards.
@@ -161,7 +160,6 @@ def setup_local_env():
 
 @pytest.fixture(scope="function")
 
-
 def dynamodb_client(setup_local_env):
     """
     Create a DynamoDB client configured to use the local DynamoDB instance.
@@ -176,7 +174,6 @@ def dynamodb_client(setup_local_env):
 
 
 @pytest.fixture(scope="function")
-
 
 def lambda_client(setup_local_env):
     """
@@ -198,7 +195,6 @@ def lambda_client(setup_local_env):
 
 
 @pytest.fixture(scope="function")
-
 
 def patches_table(dynamodb_client):
     """
@@ -222,7 +218,6 @@ def patches_table(dynamodb_client):
 
 
 @pytest.fixture(scope="function")
-
 
 def discussions_table(dynamodb_client):
     """
@@ -255,7 +250,6 @@ def discussions_table(dynamodb_client):
 
 @pytest.fixture(scope="function")
 
-
 def sample_patch_data():
     """
     Create sample patch data for testing.
@@ -284,7 +278,6 @@ def sample_patch_data():
 
 
 @pytest.fixture(scope="function")
-
 
 def sample_discussion_data():
     """

@@ -12,15 +12,35 @@ NC='\033[0m' # No Color
 
 echo -e "${BLUE}Running direct Lambda invocation tests...${NC}"
 
-# First, clean up any previous test environment
-if [ -f docker-compose.log ]; then
-    echo -e "${BLUE}Cleaning up previous test environment...${NC}"
-    ./scripts/clean_local_test_env.sh --stop-containers || true
+# First, clean up any previous test environment completely
+echo -e "${BLUE}Cleaning up previous test environment...${NC}"
+
+# Check for and remove any pods related to lkml-assistant
+for pod in $(podman pod ps --format "{{.Id}}" | grep -v "INFRA ID"); do
+    if podman pod inspect $pod | grep -q "lkml-assistant"; then
+        echo -e "${YELLOW}Removing pod: $pod${NC}"
+        podman pod rm --force $pod >/dev/null 2>&1 || true
+    fi
+done
+
+# Stop and remove all lkml-assistant related containers
+podman stop $(podman ps -a | grep lkml-assistant | awk '{print $1}') >/dev/null 2>&1 || true
+podman rm -f $(podman ps -a | grep lkml-assistant | awk '{print $1}') >/dev/null 2>&1 || true
+
+# Double check that the dynamodb container is completely gone
+if podman ps -a | grep -q "lkml-assistant"; then
+    echo -e "${RED}Failed to remove all containers. Please manually clean up with these commands:${NC}"
+    echo -e "${YELLOW}podman pod rm --force \$(podman pod ps --format \"{{.Id}}\")${NC}"
+    echo -e "${YELLOW}podman rm -f \$(podman ps -a | grep lkml-assistant | awk '{print \$1}')${NC}"
+    exit 1
 fi
 
 # Start just the DynamoDB container for testing
 echo -e "${BLUE}Starting DynamoDB container for testing...${NC}"
-podman run -d --name lkml-assistant-dynamodb -p 8000:8000 amazon/dynamodb-local:latest -jar DynamoDBLocal.jar -sharedDb -inMemory || true
+if ! podman run -d --name lkml-assistant-dynamodb -p 8000:8000 amazon/dynamodb-local:latest -jar DynamoDBLocal.jar -sharedDb -inMemory; then
+    echo -e "${RED}Failed to start DynamoDB container. Exiting.${NC}"
+    exit 1
+fi
 
 # Wait for the container to be ready
 echo -e "${BLUE}Waiting for container to be ready...${NC}"
@@ -126,7 +146,7 @@ sleep 2
 
 # Run just the direct Lambda invocation tests
 echo -e "${BLUE}Running direct Lambda invocation tests...${NC}"
-python -m pytest tests/integration/test_local_lambda.py::test_fetch_patches_lambda_direct -v
+/Library/Frameworks/Python.framework/Versions/3.9/bin/python3 -m pytest tests/integration/test_local_lambda.py::test_fetch_patches_lambda_direct -v
 
 # Cleanup after tests
 echo -e "${BLUE}Cleaning up test environment...${NC}"

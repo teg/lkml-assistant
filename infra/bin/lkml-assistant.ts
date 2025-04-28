@@ -19,16 +19,16 @@ const stackName = `LkmlAssistantStack-${environment}`;
 new LkmlAssistantStack(app, stackName, {
   // Pass environment-specific configuration
   environmentName: environment,
-  
+
   // Set AWS account and region
-  env: { 
-    account: account, 
-    region: region 
+  env: {
+    account: account,
+    region: region,
   },
-  
+
   // Add description
   description: `LKML Assistant infrastructure for ${environment} environment`,
-  
+
   // Add termination protection for production
   terminationProtection: environment === 'prod',
 });

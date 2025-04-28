@@ -20,14 +20,14 @@ export interface DashboardProps {
  */
 export function createDashboard(scope: Construct, props: DashboardProps): cloudwatch.Dashboard {
   const { environment, lambdaFunctions, dynamoTables, deadLetterQueue } = props;
-  
+
   // Create dashboard
   const dashboard = new cloudwatch.Dashboard(scope, `LkmlAssistantDashboard-${environment}`, {
     dashboardName: `LkmlAssistant-${environment}`,
   });
 
   // Add Lambda metrics
-  const lambdaWidgets: cloudwatch.IWidget[] = lambdaFunctions.map(fn => {
+  const lambdaWidgets: cloudwatch.IWidget[] = lambdaFunctions.map((fn) => {
     return new cloudwatch.GraphWidget({
       title: `Lambda: ${fn.functionName}`,
       left: [
@@ -35,13 +35,13 @@ export function createDashboard(scope: Construct, props: DashboardProps): cloudw
           statistic: 'Sum',
           period: cdk.Duration.minutes(1),
           label: 'Invocations',
-          color: '#2ca02c'
+          color: '#2ca02c',
         }),
         fn.metricErrors({
           statistic: 'Sum',
           period: cdk.Duration.minutes(1),
           label: 'Errors',
-          color: '#d62728'
+          color: '#d62728',
         }),
       ],
       right: [
@@ -49,21 +49,21 @@ export function createDashboard(scope: Construct, props: DashboardProps): cloudw
           statistic: 'Average',
           period: cdk.Duration.minutes(1),
           label: 'Duration (avg)',
-          color: '#1f77b4'
+          color: '#1f77b4',
         }),
         fn.metricDuration({
           statistic: 'Maximum',
           period: cdk.Duration.minutes(1),
           label: 'Duration (max)',
-          color: '#ff7f0e'
+          color: '#ff7f0e',
         }),
       ],
       width: 12,
     });
   });
-  
+
   // Add DynamoDB metrics
-  const dynamoWidgets: cloudwatch.IWidget[] = dynamoTables.map(table => {
+  const dynamoWidgets: cloudwatch.IWidget[] = dynamoTables.map((table) => {
     return new cloudwatch.GraphWidget({
       title: `DynamoDB: ${table.tableName}`,
       left: [
@@ -71,13 +71,13 @@ export function createDashboard(scope: Construct, props: DashboardProps): cloudw
           statistic: 'Sum',
           period: cdk.Duration.minutes(5),
           label: 'Read Capacity',
-          color: '#1f77b4'
+          color: '#1f77b4',
         }),
         table.metricConsumedWriteCapacityUnits({
           statistic: 'Sum',
           period: cdk.Duration.minutes(5),
           label: 'Write Capacity',
-          color: '#ff7f0e'
+          color: '#ff7f0e',
         }),
       ],
       right: [
@@ -85,13 +85,13 @@ export function createDashboard(scope: Construct, props: DashboardProps): cloudw
           statistic: 'Sum',
           period: cdk.Duration.minutes(5),
           label: 'Throttled Requests',
-          color: '#d62728'
+          color: '#d62728',
         }),
       ],
       width: 12,
     });
   });
-  
+
   // Add DLQ metrics if provided
   const dlqWidgets: cloudwatch.IWidget[] = [];
   if (deadLetterQueue) {
@@ -103,20 +103,20 @@ export function createDashboard(scope: Construct, props: DashboardProps): cloudw
             statistic: 'Sum',
             period: cdk.Duration.minutes(5),
             label: 'Messages Received',
-            color: '#d62728'
+            color: '#d62728',
           }),
           deadLetterQueue.metricApproximateNumberOfMessagesVisible({
             statistic: 'Maximum',
             period: cdk.Duration.minutes(5),
             label: 'Messages Visible',
-            color: '#ff7f0e'
+            color: '#ff7f0e',
           }),
         ],
         width: 24,
       })
     );
   }
-  
+
   // Add application-specific metrics
   const appWidgets: cloudwatch.IWidget[] = [
     new cloudwatch.GraphWidget({
@@ -126,23 +126,23 @@ export function createDashboard(scope: Construct, props: DashboardProps): cloudw
           namespace: 'LkmlAssistant',
           metricName: 'ApiCalls',
           dimensionsMap: {
-            'Environment': environment,
+            Environment: environment,
           },
           statistic: 'Sum',
           period: cdk.Duration.minutes(5),
           label: 'API Calls',
-          color: '#2ca02c'
+          color: '#2ca02c',
         }),
         new cloudwatch.Metric({
           namespace: 'LkmlAssistant',
           metricName: 'ApiLatency',
           dimensionsMap: {
-            'Environment': environment,
+            Environment: environment,
           },
           statistic: 'Average',
           period: cdk.Duration.minutes(5),
           label: 'API Latency (avg)',
-          color: '#1f77b4'
+          color: '#1f77b4',
         }),
       ],
       width: 12,
@@ -154,18 +154,18 @@ export function createDashboard(scope: Construct, props: DashboardProps): cloudw
           namespace: 'LkmlAssistant',
           metricName: 'RecordCount',
           dimensionsMap: {
-            'Environment': environment,
+            Environment: environment,
           },
           statistic: 'Sum',
           period: cdk.Duration.minutes(5),
           label: 'Records Processed',
-          color: '#2ca02c'
+          color: '#2ca02c',
         }),
       ],
       width: 12,
     }),
   ];
-  
+
   // Combine all widgets
   dashboard.addWidgets(
     new cloudwatch.TextWidget({
@@ -178,6 +178,6 @@ export function createDashboard(scope: Construct, props: DashboardProps): cloudw
     ...dlqWidgets,
     ...appWidgets
   );
-  
+
   return dashboard;
 }

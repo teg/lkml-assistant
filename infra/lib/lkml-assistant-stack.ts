@@ -263,7 +263,7 @@ export class LkmlAssistantStack extends cdk.Stack {
     // 3. Schedule weekly discussion refresh to update any missing discussions
     const refreshDiscussionsWeeklyRule = new events.Rule(this, 'RefreshDiscussionsWeeklyRule', {
       ruleName: 'LkmlAssistant-RefreshDiscussionsWeekly',
-      schedule: events.Schedule.cron({ dayOfWeek: '0', hour: '4', minute: '30' }),
+      schedule: events.Schedule.cron({ day: '0', hour: '4', minute: '30' }),
       description: 'Refresh all discussions weekly to catch any missed updates',
       enabled: true,
     });

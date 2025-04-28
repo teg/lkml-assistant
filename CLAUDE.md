@@ -95,25 +95,29 @@ To ensure consistency in the codebase, use these formatter and linter configurat
   - Command: `npm run lint` (in the infra directory)
   - Already integrated in `make fmt`
 
-### Resolving Conflicts Between Tools
+### Autoformatting Approach
 
-Sometimes there can be conflicts between linters and formatters:
+This project relies on autoformatting rather than linting to maintain consistent code style:
 
-1. For **Python**, the key conflicts are:
-   - **W503 (line break before binary operator)**: Flake8 flags this as a warning by default, but Black formats code in a way that triggers this warning. The `.flake8` configuration already ignores this warning to prevent conflicts.
-   - **E203 (whitespace before ':')**: Similarly ignored in the `.flake8` config to prevent conflicts with Black's formatting.
-
-2. For **TypeScript**, Prettier and ESLint may have conflicting rules:
-   - If conflicts arise, prefer Prettier's formatting choices over ESLint's
-   - Consider adding an ESLint configuration extension like `eslint-config-prettier` to disable ESLint rules that conflict with Prettier
-
-3. **When in doubt**:
-   - For Python: Black takes precedence over Flake8
-   - For TypeScript: Prettier takes precedence over ESLint
+1. For **Python**:
+   - **Black** is used as the sole formatter
+   - Configuration is in `pyproject.toml` with a line length of 100 characters
+   - No linters are used to avoid conflicts with Black's formatting decisions
+   
+2. For **TypeScript**:
+   - **Prettier** is used as the sole formatter
+   - Configuration is in `.prettierrc` with consistent settings
+   - No separate linting is performed
 
 ### Git Pre-commit Hooks
 
-The repository has git pre-commit hooks that run formatting and linting before each commit. To bypass these checks in exceptional cases, use:
+The repository has git pre-commit hooks that automatically format code before each commit. The hook will:
+
+1. Format all Python code with Black
+2. Format all TypeScript code with Prettier
+3. Fail the commit if changes were made during formatting
+
+To bypass these checks in exceptional cases, use:
 
 ```bash
 git commit --no-verify -m "Commit message"

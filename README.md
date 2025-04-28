@@ -55,6 +55,7 @@ For detailed technical information, see:
 - `/docs`: Project documentation
   - `/architecture`: System architecture details
   - `/implementation`: Implementation plan and progress
+  - `/adr`: Architecture Decision Records
 
 ## Getting Started
 
@@ -103,6 +104,20 @@ npm run deploy  # Deploy changes to AWS
 ### Lambda Functions
 
 Lambda functions are implemented in Python 3.9 and are deployed automatically as part of the CDK stack.
+
+### Testing
+
+The project uses a multi-faceted approach to testing:
+
+```bash
+make test               # Run all tests
+make test-unit          # Run unit tests only
+make test-lambda-direct # Run direct Lambda invocation tests
+make test-local         # Run tests with Docker/Podman containers
+make format             # Format Python code with Black
+```
+
+For more details on our testing approach, see the [Local Testing Approach decision document](./docs/architecture/decisions/0003-local-testing-approach.md).
 
 ## License
 

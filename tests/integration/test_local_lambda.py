@@ -20,7 +20,7 @@ def test_fetch_patches_lambda_direct(dynamodb_client, patches_table, setup_local
     # Configure environment for the test
     os.environ["DYNAMODB_ENDPOINT"] = "http://localhost:8000"
     os.environ["AWS_ENDPOINT_URL"] = "http://localhost:4566"
-    
+
     # Create test data
     test_data = [{
         "id": 98765,
@@ -36,30 +36,30 @@ def test_fetch_patches_lambda_direct(dynamodb_client, patches_table, setup_local
         "msgid": "test-msgid@example.com",
         "content": "Test content from Direct Lambda"
     }]
-    
+
     # Create test event
     event = create_test_event(test_data)
-    
+
     # Create context
     context = MockLambdaContext(function_name="LkmlAssistant-FetchPatches-test")
-    
+
     # Call the handler using our helper
     result = invoke_fetch_patches_lambda(event, context)
-    
+
     # Check the response
     assert result is not None
     assert 'statusCode' in result
     assert result['statusCode'] == 200
-    
+
     # Allow some time for DynamoDB operations to complete
     time.sleep(1)
-    
+
     # Verify the patch was saved to DynamoDB using the client directly
     response = dynamodb_client.scan(
         TableName=patches_table,
         Limit=10
     )
-    
+
     # Check if our test patch was saved
     found = False
     for item in response.get('Items', []):
@@ -67,7 +67,7 @@ def test_fetch_patches_lambda_direct(dynamodb_client, patches_table, setup_local
         if patch.get('name') == "Test patch from Direct Lambda":
             found = True
             break
-    
+
     assert found, "Test patch not found in DynamoDB after Lambda execution"
 
 
@@ -129,7 +129,7 @@ def test_fetch_patches_lambda_localstack(lambda_client, dynamodb_client, patches
         TableName=patches_table,
         Limit=10
     )
-    
+
     # Check if our test patch was saved
     found = False
     for item in response.get('Items', []):
@@ -137,5 +137,5 @@ def test_fetch_patches_lambda_localstack(lambda_client, dynamodb_client, patches
         if patch.get('name') == "Test patch from LocalStack Lambda":
             found = True
             break
-    
+
     assert found, "Test patch not found in DynamoDB after LocalStack Lambda execution"

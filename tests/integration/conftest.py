@@ -17,6 +17,8 @@ os.environ["LOG_LEVEL"] = "DEBUG"
 
 
 @pytest.fixture(scope="session")
+
+
 def setup_local_env():
     """
     Set up the local test environment before tests and clean up afterwards.
@@ -34,7 +36,7 @@ def setup_local_env():
         aws_access_key_id='test',
         aws_secret_access_key='test'
     )
-    
+
     # Delete tables if they exist
     for table_name in ['LkmlAssistant-Patches-test', 'LkmlAssistant-Discussions-test']:
         try:
@@ -43,7 +45,7 @@ def setup_local_env():
             time.sleep(1)
         except Exception:
             pass
-    
+
     # Create Patches table
     try:
         dynamodb.create_table(
@@ -91,7 +93,7 @@ def setup_local_env():
         print("Created Patches table")
     except Exception as e:
         print(f"Error creating Patches table: {str(e)}")
-    
+
     # Create Discussions table
     try:
         dynamodb.create_table(
@@ -141,13 +143,13 @@ def setup_local_env():
         print("Created Discussions table")
     except Exception as e:
         print(f"Error creating Discussions table: {str(e)}")
-    
+
     # Wait for tables to be ACTIVE
     print("Waiting for tables to be ready...")
     time.sleep(2)
-    
+
     yield
-    
+
     # Clean up after tests
     print("Cleaning up local test environment...")
     try:
@@ -158,6 +160,8 @@ def setup_local_env():
 
 
 @pytest.fixture(scope="function")
+
+
 def dynamodb_client(setup_local_env):
     """
     Create a DynamoDB client configured to use the local DynamoDB instance.
@@ -172,6 +176,8 @@ def dynamodb_client(setup_local_env):
 
 
 @pytest.fixture(scope="function")
+
+
 def lambda_client(setup_local_env):
     """
     Create a Lambda client configured to use the local LocalStack instance.
@@ -180,18 +186,20 @@ def lambda_client(setup_local_env):
     # Using moto to mock AWS services instead of actual LocalStack
     import boto3
     from unittest.mock import MagicMock
-    
+
     mock_client = MagicMock()
     mock_client.invoke.return_value = {
         'StatusCode': 200,
         'Payload': MagicMock()
     }
     mock_client.Payload.read.return_value = json.dumps({"statusCode": 200}).encode()
-    
+
     return mock_client
 
 
 @pytest.fixture(scope="function")
+
+
 def patches_table(dynamodb_client):
     """
     Get the DynamoDB patches table and ensure it's empty for each test.
@@ -214,6 +222,8 @@ def patches_table(dynamodb_client):
 
 
 @pytest.fixture(scope="function")
+
+
 def discussions_table(dynamodb_client):
     """
     Get the DynamoDB discussions table and ensure it's empty for each test.
@@ -244,6 +254,8 @@ def discussions_table(dynamodb_client):
 
 
 @pytest.fixture(scope="function")
+
+
 def sample_patch_data():
     """
     Create sample patch data for testing.
@@ -272,6 +284,8 @@ def sample_patch_data():
 
 
 @pytest.fixture(scope="function")
+
+
 def sample_discussion_data():
     """
     Create sample discussion data for testing.

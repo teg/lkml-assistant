@@ -7,6 +7,8 @@ import os
 # We're working directly with DynamoDB here to avoid auth issues with Podman
 
 # Utility functions for DynamoDB format conversion
+
+
 def to_dynamodb_item(python_dict):
     """Convert a Python dictionary to DynamoDB format."""
     item = {}
@@ -23,6 +25,7 @@ def to_dynamodb_item(python_dict):
         elif value is None:
             item[key] = {'NULL': True}
     return item
+
 
 def from_dynamodb_item(dynamodb_item):
     """Convert a DynamoDB item to Python dictionary."""
@@ -43,7 +46,7 @@ def test_save_and_get_patch(dynamodb_client, patches_table, sample_patch_data):
     """
     # Convert Python types to DynamoDB format using the helper function
     item = to_dynamodb_item(sample_patch_data)
-            
+
     # Save the patch directly to DynamoDB
     dynamodb_client.put_item(
         TableName=patches_table,
@@ -52,15 +55,15 @@ def test_save_and_get_patch(dynamodb_client, patches_table, sample_patch_data):
 
     # Retrieve the patch
     response = dynamodb_client.get_item(
-        TableName=patches_table, 
+        TableName=patches_table,
         Key={'id': {'S': sample_patch_data["id"]}}
     )
-    
+
     item = response.get('Item', {})
-    
+
     # Convert DynamoDB format back to Python using the helper function
     patch = from_dynamodb_item(item)
-            
+
     # Verify the patch data
     assert patch is not None
     assert patch["id"] == sample_patch_data["id"]
@@ -87,7 +90,7 @@ def test_save_and_get_discussion(dynamodb_client, discussions_table, patches_tab
             continue
         elif value is None:
             patch_item[key] = {'NULL': True}
-            
+
     # Save the patch directly to DynamoDB
     dynamodb_client.put_item(TableName=patches_table, Item=patch_item)
 
@@ -105,21 +108,21 @@ def test_save_and_get_discussion(dynamodb_client, discussions_table, patches_tab
             continue
         elif value is None:
             discussion_item[key] = {'NULL': True}
-            
+
     # Save the discussion directly to DynamoDB
     dynamodb_client.put_item(TableName=discussions_table, Item=discussion_item)
 
     # Retrieve the discussion
     response = dynamodb_client.get_item(
-        TableName=discussions_table, 
+        TableName=discussions_table,
         Key={
             'id': {'S': sample_discussion_data["id"]},
             'timestamp': {'S': sample_discussion_data["timestamp"]}
         }
     )
-    
+
     item = response.get('Item', {})
-    
+
     # Convert DynamoDB format back to Python
     discussion = {}
     for key, value in item.items():
@@ -156,7 +159,7 @@ def test_query_patches_by_status(dynamodb_client, patches_table, sample_patch_da
             continue
         elif value is None:
             item[key] = {'NULL': True}
-            
+
     # Save the patch directly to DynamoDB
     dynamodb_client.put_item(TableName=patches_table, Item=item)
 
@@ -173,7 +176,7 @@ def test_query_patches_by_status(dynamodb_client, patches_table, sample_patch_da
         },
         Limit=10
     )
-    
+
     # Convert DynamoDB format back to Python
     patches = []
     for item in response.get('Items', []):
@@ -210,7 +213,7 @@ def test_query_discussions_by_patch(dynamodb_client, discussions_table, patches_
             continue
         elif value is None:
             patch_item[key] = {'NULL': True}
-            
+
     # Save the patch directly to DynamoDB
     dynamodb_client.put_item(TableName=patches_table, Item=patch_item)
 
@@ -228,7 +231,7 @@ def test_query_discussions_by_patch(dynamodb_client, discussions_table, patches_
             continue
         elif value is None:
             discussion_item[key] = {'NULL': True}
-            
+
     # Save the discussion directly to DynamoDB
     dynamodb_client.put_item(TableName=discussions_table, Item=discussion_item)
 
@@ -244,7 +247,7 @@ def test_query_discussions_by_patch(dynamodb_client, discussions_table, patches_
             ':gsi1pk': {'S': f'PATCH#{sample_patch_data["id"]}'}
         }
     )
-    
+
     # Convert DynamoDB format back to Python
     discussions = []
     for item in response.get('Items', []):
@@ -281,7 +284,7 @@ def test_update_patch_status(dynamodb_client, patches_table, sample_patch_data):
             continue
         elif value is None:
             item[key] = {'NULL': True}
-            
+
     # Save the patch directly to DynamoDB
     dynamodb_client.put_item(
         TableName=patches_table,
@@ -306,12 +309,12 @@ def test_update_patch_status(dynamodb_client, patches_table, sample_patch_data):
 
     # Get the updated patch
     response = dynamodb_client.get_item(
-        TableName=patches_table, 
+        TableName=patches_table,
         Key={'id': {'S': sample_patch_data["id"]}}
     )
-    
+
     item = response.get('Item', {})
-    
+
     # Convert DynamoDB format back to Python
     updated_patch = {}
     for key, value in item.items():
@@ -345,7 +348,7 @@ def test_count_discussions_by_patch(dynamodb_client, discussions_table, patches_
             continue
         elif value is None:
             patch_item[key] = {'NULL': True}
-            
+
     # Save the patch directly to DynamoDB
     dynamodb_client.put_item(TableName=patches_table, Item=patch_item)
 
@@ -363,7 +366,7 @@ def test_count_discussions_by_patch(dynamodb_client, discussions_table, patches_
             continue
         elif value is None:
             discussion_item[key] = {'NULL': True}
-            
+
     # Save the discussion directly to DynamoDB
     dynamodb_client.put_item(TableName=discussions_table, Item=discussion_item)
 
@@ -371,7 +374,7 @@ def test_count_discussions_by_patch(dynamodb_client, discussions_table, patches_
     second_discussion = sample_discussion_data.copy()
     second_discussion["id"] = "disc-67890"
     second_discussion["messageId"] = "second-discussion@example.com"
-    
+
     # Convert second discussion to DynamoDB format
     second_discussion_item = {}
     for key, value in second_discussion.items():
@@ -386,7 +389,7 @@ def test_count_discussions_by_patch(dynamodb_client, discussions_table, patches_
             continue
         elif value is None:
             second_discussion_item[key] = {'NULL': True}
-            
+
     # Save the second discussion directly to DynamoDB
     dynamodb_client.put_item(TableName=discussions_table, Item=second_discussion_item)
 
@@ -403,7 +406,7 @@ def test_count_discussions_by_patch(dynamodb_client, discussions_table, patches_
         },
         Select='COUNT'
     )
-    
+
     # Get the count from the response
     count = response.get('Count', 0)
 

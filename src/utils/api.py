@@ -50,6 +50,8 @@ def retry_with_backoff(
 
 
 @retry_with_backoff
+
+
 def fetch_api_data(url: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
     """
     Fetch data from an API with retry logic

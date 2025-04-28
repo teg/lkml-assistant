@@ -116,7 +116,7 @@ def get_patches(page: int = 1, per_page: int = 20, event: Dict[str, Any] = None)
         except Exception as e:
             logger.error(f"Error processing test data: {str(e)}")
             return []
-    
+
     try:
         # Use the patchwork_api module which handles retries
         data = patchwork_api.fetch_patches(page=page, per_page=per_page, order="-date")

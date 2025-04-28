@@ -30,18 +30,18 @@ def load_lambda_module(function_path):
     """
     # Get the absolute path to the Lambda function file
     file_path = os.path.join(os.getcwd(), function_path)
-    
+
     # Extract the module name from the file path
     module_name = os.path.splitext(os.path.basename(file_path))[0]
-    
+
     # Load the module dynamically
     spec = importlib.util.spec_from_file_location(module_name, file_path)
     if spec is None:
         raise ImportError(f"Could not find Lambda module at: {file_path}")
-    
+
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    
+
     return module
 
 
@@ -56,22 +56,22 @@ def invoke_fetch_patches_lambda(event, context=None):
     os.environ["LOG_LEVEL"] = "DEBUG"
     os.environ["DYNAMODB_ENDPOINT"] = "http://localhost:8000"
     os.environ["AWS_ENDPOINT_URL"] = "http://localhost:4566"
-    
+
     # Create context if not provided
     if context is None:
         context = MockLambdaContext(function_name="LkmlAssistant-FetchPatches-test")
-    
+
     # Save original boto3 client
     original_client = boto3.client
-    
+
     # Define mock client for Lambda
     class MockLambdaClient:
         def invoke(self, **kwargs):
             return {"StatusCode": 202}
-    
+
     # Patch boto3 resource
     original_resource = boto3.resource
-    
+
     # Patch boto3.client to return our mock for Lambda and configure DynamoDB
     def mock_client(service_name, *args, **kwargs):
         if service_name == "lambda":
@@ -89,10 +89,10 @@ def invoke_fetch_patches_lambda(event, context=None):
             for k, v in kwargs.items():
                 if k not in new_kwargs:
                     new_kwargs[k] = v
-                    
+
             return original_client(service_name, *args, **new_kwargs)
         return original_client(service_name, *args, **kwargs)
-    
+
     # Patch boto3.resource
     def mock_resource(service_name, *args, **kwargs):
         if service_name == "dynamodb":
@@ -108,14 +108,14 @@ def invoke_fetch_patches_lambda(event, context=None):
             for k, v in kwargs.items():
                 if k not in new_kwargs:
                     new_kwargs[k] = v
-            
+
             return original_resource(service_name, *args, **new_kwargs)
         return original_resource(service_name, *args, **kwargs)
-    
+
     # Apply the patches
     boto3.client = mock_client
     boto3.resource = mock_resource
-    
+
     try:
         # Load and execute the Lambda function
         from src.functions.fetch_patches import index
@@ -147,7 +147,7 @@ def create_test_event(test_data=None):
             "msgid": "test-msgid@example.com",
             "content": "Test content from Lambda"
         }]
-    
+
     return {
         "page": 1,
         "per_page": 2,

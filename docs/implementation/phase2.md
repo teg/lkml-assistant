@@ -1,153 +1,248 @@
-# Phase 2: Data Processing
+# Phase 2: Data Processing & Web Dashboard Foundation
 
-This phase involves implementing the business logic for processing and analyzing the data fetched from external sources.
+This phase implements data processing for extracted information and lays the groundwork for the web dashboard interface.
 
 ## 2.1: Patch Status Tracking
 
-**Purpose**: Implement a system to track and update the status of patches.
+**Purpose**: Implement a comprehensive system to track and update the status of patches.
 
-**Implementation Plan**:
+**Implementation Details**:
 
-- **Status Change Detection**
-  - Create logic to detect status changes from API
-  - Implement comparison with existing records
-  - Add timestamp tracking for status changes
-  - Create status history for auditing
-
-- **Status Derivation Rules**
-  - Implement rules for deriving status from discussions
-  - Create patterns for detecting acceptances/rejections
-  - Add maintainer-specific rules
-  - Implement rule-based status inference
+- **Status Change Detection and History**
+  - Create Lambda function `update-patch-status` to detect and record status changes
+  - Implement comparison logic between new API data and existing records
+  - Add timestamp tracking and status change history in DynamoDB
+  - Create GSI for efficient status history queries
+  - Implement status change event creation for notifications
+  
+- **Status Derivation Logic**
+  - Create `status_analyzer.py` utility with rules for deriving status from discussions
+  - Implement maintainer response detection (approvals, rejections, revision requests)
+  - Add pattern matching for common status indicators in messages
+  - Create confidence scoring for derived statuses
+  - Implement special handling for different patch series types
 
 - **Status Update Workflow**
-  - Create Lambda function for status updates
-  - Implement DynamoDB transactions for updates
-  - Add notification triggers for status changes
-  - Create status update metrics
+  - Create Step Functions workflow for status update orchestration
+  - Implement DynamoDB transactions for atomic status updates
+  - Add EventBridge rules for triggering status updates
+  - Create CloudWatch metrics for status change tracking
+  - Implement retry mechanisms for failed status updates
+  
+- **Batch Processing Optimization**
+  - Create efficient batch processing for status updates
+  - Implement DynamoDB batch operations
+  - Add parallel processing for large update sets
+  - Create progress tracking for long-running operations
+  - Implement throttling controls for API rate limits
 
-- **Status Query API**
-  - Implement API endpoints for status queries
-  - Create filtering and sorting options
-  - Add pagination for status history
-  - Implement status summary statistics
+## 2.2: Discussion Threading and Analysis
 
-## 2.2: Discussion Threading
+**Purpose**: Create a sophisticated system for threading discussions and extracting key information.
 
-**Purpose**: Implement a system to track and correlate discussions related to patches.
+**Implementation Details**:
 
-**Implementation Plan**:
-
-- **Thread Reconstruction**
-  - Create algorithm for reconstructing email threads
-  - Implement reply chain tracking
-  - Add parent-child relationship mapping
-  - Create thread visualization data
-
-- **Message Correlation**
-  - Implement message ID matching
-  - Create fuzzy matching for lost references
-  - Add subject line correlation
+- **Thread Reconstruction Algorithm**
+  - Implement `thread_analyzer.py` for reconstructing discussion threads
+  - Create parent-child relationship mapping based on message headers
+  - Add support for handling broken threads with heuristics
+  - Implement thread visualization data structure
+  - Create thread depth and breadth metrics
+  
+- **Message Correlation Engine**
+  - Create `message_correlator.py` utility for matching related messages
+  - Implement message ID and reference header tracking
+  - Add fuzzy matching for messages with missing references
+  - Create subject line and conversation flow analysis
   - Implement time-based correlation heuristics
 
-- **Author Tracking**
-  - Create author identity resolution
-  - Implement maintainer detection
-  - Add contributor statistics
-  - Create author activity tracking
+- **Author and Role Classification**
+  - Create `author_analyzer.py` for identifying participant roles
+  - Implement maintainer and reviewer detection
+  - Add contribution pattern analysis
+  - Create historical activity tracking per author
+  - Implement author expertise topic modeling
 
-- **Thread Analysis**
-  - Implement thread depth and breadth metrics
-  - Create interaction pattern detection
-  - Add temporal analysis of discussions
-  - Implement thread summarization
-
-## 2.3: Summarization Engine
-
-**Purpose**: Create a system to generate summaries of patches and discussions.
-
-**Implementation Plan**:
-
-- **NLP Pipeline**
-  - Implement text extraction and cleaning
-  - Create tokenization and preprocessing
-  - Add named entity recognition
-  - Implement keyword extraction
-
-- **Summary Generation**
-  - Create extractive summarization algorithm
-  - Implement abstractive summary generation
-  - Add multi-level summary support
-  - Create customizable summary length
-
-- **Key Point Extraction**
+- **Discussion Metadata Extraction**
+  - Create utility for extracting key metadata from discussions
+  - Implement tagging for technical concepts mentioned
+  - Add code reference detection and linking
+  - Create citation analysis between messages
   - Implement key point identification
-  - Create technical term extraction
-  - Add code change highlighting
-  - Implement issue detection
 
-- **Sentiment Analysis**
-  - Create sentiment classification for discussions
-  - Implement opinion mining
-  - Add agreement/disagreement detection
-  - Create review sentiment scoring
+## 2.3: Content Analysis and Summarization
 
-## 2.4: Advanced Event Processing
+**Purpose**: Create an intelligent system to generate summaries and extract key insights from patches and discussions.
 
-**Purpose**: Implement advanced event processing for data correlation and updates.
+**Implementation Details**:
 
-**Implementation Plan**:
+- **NLP Pipeline Development**
+  - Create `nlp_processor.py` with text processing pipeline
+  - Implement text extraction, cleaning, and normalization
+  - Add tokenization and text preprocessing
+  - Create technical term recognition for kernel development
+  - Implement named entity extraction for components, systems, and technologies
 
-- **Event-Driven Architecture**
-  - Create EventBridge event patterns
-  - Implement Step Functions for workflows
-  - Add event correlation and aggregation
-  - Create event replay capability
+- **Summary Generation System**
+  - Create `summary_generator.py` for extractive and abstractive summaries
+  - Implement extractive summarization for identifying key sentences
+  - Add multi-level summary support (short, medium, detailed)
+  - Create topic-based summary organization
+  - Implement custom summarization for different content types (patches, reviews, discussions)
 
-- **State Management**
-  - Implement workflow state tracking
-  - Create state transitions and validation
-  - Add idempotent processing
-  - Implement checkpointing and resumption
+- **Technical Content Analysis**
+  - Create specialized analyzers for kernel-specific content
+  - Implement code change extraction and highlighting
+  - Add API and interface change detection
+  - Create dependency impact analysis
+  - Implement semantic categorization of changes
+  
+- **Perspective and Opinion Extraction**
+  - Create `opinion_analyzer.py` for identifying different viewpoints
+  - Implement agreement/disagreement detection
+  - Add stance classification for technical positions
+  - Create relationship mapping between differing opinions
+  - Implement reasoning extraction from technical arguments
 
-- **Error Recovery**
-  - Create robust error handling strategies
-  - Implement dead letter processing
-  - Add retry with exponential backoff
-  - Create error classification and routing
+## 2.4: Web Dashboard Foundations
 
-- **Performance Optimization**
-  - Implement parallel processing
-  - Create batching for efficiency
-  - Add adaptive concurrency
-  - Implement throttling control
+**Purpose**: Establish the technical foundation for the web dashboard interface.
 
-## 2.5: Notification System
+**Implementation Details**:
 
-**Purpose**: Create a notification system for important events and updates.
+- **API Layer Implementation**
+  - Create new `api-gateway` CDK construct in `/infra/lib/api-gateway.ts`
+  - Implement REST API endpoints for dashboard data access
+  - Add authentication and authorization with Cognito
+  - Create API documentation with OpenAPI
+  - Implement request validation and error handling
+  
+- **Lambda Functions for API Backend**
+  - Create `get-patches` Lambda for dashboard data retrieval
+  - Implement `get-discussions` Lambda for thread visualization
+  - Add `get-summary` Lambda for content summarization
+  - Create `get-patch-stats` Lambda for analytics
+  - Implement proper pagination, filtering, and sorting
 
-**Implementation Plan**:
+- **Response Data Models**
+  - Create TypeScript interfaces for API responses in `/src/models/api-responses.ts`
+  - Implement data transformation layer from DynamoDB to API models
+  - Add schema validation for responses
+  - Create standardized error response formats
+  - Implement data serialization and compression for large responses
 
-- **Notification Channels**
-  - Implement email notifications
-  - Create Slack integration
-  - Add webhook support
-  - Implement in-app notifications
+- **API Testing and Documentation**
+  - Create API integration tests in `/tests/integration/api/`
+  - Implement automated API documentation generation
+  - Add Postman collection for manual testing
+  - Create performance testing for API endpoints
+  - Implement mock backend for frontend development
+
+## 2.5: DynamoDB Optimization
+
+**Purpose**: Optimize DynamoDB structure and access patterns for web dashboard requirements.
+
+**Implementation Details**:
+
+- **Schema Refinement**
+  - Review and optimize DynamoDB table structures for dashboard access patterns
+  - Create new indexes to support common dashboard queries
+  - Implement composite keys for efficient filtering
+  - Add TTL for temporary data
+  - Create selective denormalization for read-heavy operations
+  
+- **Query Performance Optimization**
+  - Implement efficient pagination using key-based pagination
+  - Create query caching layer in API Lambda functions
+  - Add parallel query execution for dashboard components
+  - Implement query batching and request consolidation
+  - Create performance metrics for query execution
+  
+- **Data Access Layer Improvements**
+  - Enhance Repository patterns with dashboard-specific access methods
+  - Implement connection pooling for DynamoDB
+  - Add result caching for frequent queries
+  - Create auto-retries with exponential backoff
+  - Implement proper error handling with fallbacks
+
+- **Cost Optimization Strategies**
+  - Create read/write capacity planning
+  - Implement data partitioning strategy
+  - Add auto-scaling policies for DynamoDB
+  - Create cost allocation tagging
+  - Implement query optimization to reduce RCU consumption
+  
+## 2.6: Event-Driven Processing
+
+**Purpose**: Enhance the event-driven architecture for data processing and dashboard updates.
+
+**Implementation Details**:
+
+- **EventBridge Event Bus Configuration**
+  - Create dedicated event bus for LKML Assistant events
+  - Implement event patterns for different data processing stages
+  - Add event archiving for troubleshooting
+  - Create cross-account event propagation
+  - Implement event schema registry
+  
+- **Step Functions Workflows**
+  - Create Step Functions workflow for patch processing pipeline
+  - Implement discussion analysis workflow
+  - Add status update orchestration flow
+  - Create error handling and recovery paths
+  - Implement parallel execution for independent processing steps
+
+- **Asynchronous Processing Patterns**
+  - Implement asynchronous processing for time-consuming operations
+  - Create event-based communication between components
+  - Add idempotent operation support
+  - Implement retry mechanisms with DLQ
+  - Create checkpointing for long-running processes
+
+- **Real-time Dashboard Updates**
+  - Create event notifications for dashboard data changes
+  - Implement WebSocket API for real-time updates
+  - Add selective update propagation
+  - Create client-side update handling
+  - Implement server-sent events for dashboard components
+
+## 2.7: Notification System
+
+**Purpose**: Create a flexible notification system for user alerts and system events.
+
+**Implementation Details**:
+
+- **Notification Service Architecture**
+  - Create `notification-service` Lambda function
+  - Implement `NotificationManager` class for centralized notification handling
+  - Add support for multiple notification channels
+  - Create notification template system
+  - Implement notification routing logic
+
+- **Email Notification Channel**
+  - Implement SES integration for email notifications
+  - Create HTML email templates
+  - Add unsubscribe management
+  - Implement email delivery tracking
+  - Create bounce and complaint handling
+
+- **Dashboard Notification Channel**
+  - Create in-app notification center
+  - Implement notification persistence in DynamoDB
+  - Add read/unread status tracking
+  - Create notification grouping and categorization
+  - Implement notification priority levels
 
 - **Subscription Management**
-  - Create subscription/unsubscription flows
-  - Implement preference management
-  - Add notification filtering
-  - Create frequency controls
+  - Create subscription management API
+  - Implement user preference storage
+  - Add notification filtering rules
+  - Create notification frequency controls
+  - Implement time-of-day delivery preferences
 
-- **Templating Engine**
-  - Implement notification templates
-  - Create multi-format support (text, HTML)
-  - Add internationalization
-  - Implement personalization
-
-- **Delivery Tracking**
-  - Create delivery status tracking
-  - Implement bounce handling
-  - Add notification analytics
-  - Create A/B testing framework
+- **Notification Analytics**
+  - Create notification delivery tracking
+  - Implement open/click tracking
+  - Add A/B testing framework for notification content
+  - Create notification effectiveness metrics
+  - Implement user engagement analysis

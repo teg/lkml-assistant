@@ -37,8 +37,13 @@ run_python_lint() {
   
   cd "$PROJECT_ROOT"
   flake8 src tests
+  flake8_result=$?
   
-  if [ $? -eq 0 ]; then
+  log_info "Running Black code formatter check..."
+  black --check src tests
+  black_result=$?
+  
+  if [ $flake8_result -eq 0 ] && [ $black_result -eq 0 ]; then
     log_success "Python linting passed"
     return 0
   else

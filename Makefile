@@ -1,4 +1,4 @@
-.PHONY: test test-unit test-integration test-local test-lambda-direct test-lambda-localstack deploy clean-local
+.PHONY: test test-unit test-integration test-local test-lambda-direct test-lambda-localstack deploy clean-local format
 
 # Run all tests
 test:
@@ -31,3 +31,8 @@ deploy:
 # Clean up local test environment
 clean-local:
 	./scripts/clean_local_test_env.sh --stop-containers
+	
+# Format Python code with Black
+format:
+	chmod +x ./scripts/format.sh
+	./scripts/format.sh

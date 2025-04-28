@@ -58,6 +58,7 @@ jobs:
           aws-region: us-east-1
       
       - name: Run post-deployment tests
+        id: run_tests
         run: |
           echo "Running post-deployment tests for $ENVIRONMENT environment"
           
@@ -70,11 +71,15 @@ jobs:
           # Run tests with detailed output
           chmod +x ./scripts/post_deploy_test_runner.sh
           ./scripts/post_deploy_test_runner.sh $ENVIRONMENT --verbose --report-dir test-reports $TEST_PARAMS
+          echo "test_exit_code=$?" >> $GITHUB_OUTPUT
       
-      - name: Store test exit code
-        id: store_exit_code
+      - name: Check test results
         if: always()
-        run: echo "test_exit_code=$?" >> $GITHUB_OUTPUT
+        run: |
+          if [ "${{ steps.run_tests.outputs.test_exit_code }}" != "0" ]; then
+            echo "::error::Post-deployment tests failed with exit code ${{ steps.run_tests.outputs.test_exit_code }}"
+            exit 1
+          fi
       
       - name: Upload test reports
         uses: actions/upload-artifact@v4
@@ -88,10 +93,20 @@ jobs:
         run: |
           echo "## Post-Deployment Test Results for $ENVIRONMENT" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Add test exit code information
+          if [ "${{ steps.run_tests.outputs.test_exit_code }}" == "0" ]; then
+            echo "✅ **Tests passed successfully**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Tests failed with exit code ${{ steps.run_tests.outputs.test_exit_code }}**" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Add test summary if available
           if [ -f test-reports/*_*/summary.txt ]; then
             cat test-reports/*_*/summary.txt >> $GITHUB_STEP_SUMMARY
           else
-            echo "No test summary available" >> $GITHUB_STEP_SUMMARY
+            echo "No detailed test summary available" >> $GITHUB_STEP_SUMMARY
           fi
           
           # Add direct link to test reports
@@ -114,7 +129,7 @@ jobs:
             --namespace "LkmlAssistant/PostDeployTests" \
             --metric-name "TestSuccess" \
             --dimensions Environment=$ENVIRONMENT \
-            --value ${{ steps.store_exit_code.outputs.test_exit_code == 0 && 1 || 0 }} \
+            --value ${{ steps.run_tests.outputs.test_exit_code == 0 && 1 || 0 }} \
             --timestamp $(date +%s)
       
       - name: Send SNS notification on failure

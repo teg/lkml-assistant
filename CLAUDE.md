@@ -68,6 +68,57 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Keep functions focused on a single responsibility
 - Write unit tests for all new functionality
 
+## Code Formatting and Linting Tools
+
+To ensure consistency in the codebase, use these formatter and linter configurations:
+
+### Python
+
+- **Formatter**: Use [Black](https://black.readthedocs.io/) with default settings
+  - Command: `black src tests`
+  - Already integrated in `make fmt`
+
+- **Linter**: Use [Flake8](https://flake8.readthedocs.io/) with the following configuration:
+  - Max line length: 100
+  - Ignore: E203 (whitespace before ':'), W503 (line break before binary operator), E501 (line too long)
+  - Command: `flake8 --exclude="*/python/*,*/vendored/*,*/.venv/*" src tests`
+  - Already integrated in `make fmt`
+
+### TypeScript
+
+- **Formatter**: Use [Prettier](https://prettier.io/) with default settings
+  - Command: `npm run format` (in the infra directory)
+  - Already integrated in `make fmt`
+
+- **Linter**: Use [ESLint](https://eslint.org/) with the TypeScript plugin
+  - Configuration file: `/infra/.eslintrc.js`
+  - Command: `npm run lint` (in the infra directory)
+  - Already integrated in `make fmt`
+
+### Resolving Conflicts Between Tools
+
+Sometimes there can be conflicts between linters and formatters:
+
+1. For **Python**, the key conflicts are:
+   - **W503 (line break before binary operator)**: Flake8 flags this as a warning by default, but Black formats code in a way that triggers this warning. The `.flake8` configuration already ignores this warning to prevent conflicts.
+   - **E203 (whitespace before ':')**: Similarly ignored in the `.flake8` config to prevent conflicts with Black's formatting.
+
+2. For **TypeScript**, Prettier and ESLint may have conflicting rules:
+   - If conflicts arise, prefer Prettier's formatting choices over ESLint's
+   - Consider adding an ESLint configuration extension like `eslint-config-prettier` to disable ESLint rules that conflict with Prettier
+
+3. **When in doubt**:
+   - For Python: Black takes precedence over Flake8
+   - For TypeScript: Prettier takes precedence over ESLint
+
+### Git Pre-commit Hooks
+
+The repository has git pre-commit hooks that run formatting and linting before each commit. To bypass these checks in exceptional cases, use:
+
+```bash
+git commit --no-verify -m "Commit message"
+```
+
 ## Project Organization
 - Source code in `src/` directory
 - Tests in `tests/` directory

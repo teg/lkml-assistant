@@ -27,12 +27,14 @@ Joining and contributing to established open source communities like the Linux k
 
 ## Core Functionality
 
-LKML Community Guide:
+LKML Community Guide provides a web-based dashboard interface that:
 
 1. **Collects data** from Patchwork API and lore.kernel.org to capture patches and discussions
 2. **Processes content** to classify messages, extract key information, and provide context
 3. **Analyzes discussions** to identify different perspectives, technical barriers, and action items
 4. **Presents expert insights** tailored to different user needs and knowledge levels
+
+The primary user experience is through an intuitive web dashboard that organizes discussions, visualizes patch status, and provides contextual insights to help users navigate the community.
 
 ## Technical Approach
 
@@ -72,9 +74,9 @@ The LKML Community Guide is designed to grow with the communities it serves. Her
 
 If you're interested in using the LKML Community Guide:
 
-1. The project is currently in development, focusing first on the Rust for Linux community
-2. We'll provide access details as the prototype becomes available
-3. We welcome input on which communities would benefit most from this approach
+1. Access the web dashboard at our hosted URL (coming soon)
+2. The project is currently in development, focusing first on the Rust for Linux community
+3. We welcome input on which communities would benefit most from this approach and what features would be most helpful in the dashboard interface
 
 ### For Contributors
 

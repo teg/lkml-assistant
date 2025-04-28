@@ -89,7 +89,6 @@ def handle_db_error(func):
 
 
 @handle_db_error
-
 def get_item(table_name: str, key: Dict[str, Any]) -> Dict[str, Any]:
     """
     Get a single item from DynamoDB
@@ -106,7 +105,6 @@ def get_item(table_name: str, key: Dict[str, Any]) -> Dict[str, Any]:
 
 
 @handle_db_error
-
 def put_item(
     table_name: str, item: Dict[str, Any], condition_expression: Optional[str] = None
 ) -> Dict[str, Any]:
@@ -124,7 +122,6 @@ def put_item(
 
 
 @handle_db_error
-
 def update_item(
     table_name: str,
     key: Dict[str, Any],
@@ -157,7 +154,6 @@ def update_item(
 
 
 @handle_db_error
-
 def delete_item(
     table_name: str, key: Dict[str, Any], condition_expression: Optional[str] = None
 ) -> Dict[str, Any]:
@@ -175,7 +171,6 @@ def delete_item(
 
 
 @handle_db_error
-
 def query_items(
     table_name: str,
     key_condition_expression: Key,
@@ -224,7 +219,6 @@ def query_items(
 
 
 @handle_db_error
-
 def batch_get_items(request_items: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
     """
     Batch get items from multiple tables
@@ -234,7 +228,6 @@ def batch_get_items(request_items: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
 
 
 @handle_db_error
-
 def batch_write_items(request_items: Dict[str, List[Dict[str, Any]]]) -> Dict[str, Any]:
     """
     Batch write items to multiple tables
@@ -244,7 +237,6 @@ def batch_write_items(request_items: Dict[str, List[Dict[str, Any]]]) -> Dict[st
 
 
 @handle_db_error
-
 def transaction_write_items(transaction_items: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Write items in a transaction
@@ -266,7 +258,6 @@ def transaction_write_items(transaction_items: List[Dict[str, Any]]) -> Dict[str
 
 
 @handle_db_error
-
 def transaction_get_items(transaction_items: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Get items in a transaction

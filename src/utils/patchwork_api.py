@@ -27,7 +27,6 @@ class PatchworkAPIError(Exception):
 
 
 @retry_with_backoff
-
 def fetch_patches(
     page: int = 1, per_page: int = 20, order: str = "-date"
 ) -> Dict[str, Any]:

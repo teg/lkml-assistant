@@ -229,7 +229,7 @@ export class LkmlAssistantStack extends cdk.Stack {
         source: 'scheduled.hourly',
         time: new Date().toISOString(),
         page: 1,
-        per_page: 20,
+        per_page: 10,  // Reduced from 20 to 10 for development
         process_all_pages: false,
         fetch_discussions: true
       }),
@@ -251,8 +251,8 @@ export class LkmlAssistantStack extends cdk.Stack {
         source: 'scheduled.daily',
         time: new Date().toISOString(),
         page: 1,
-        per_page: 100,
-        process_all_pages: true,
+        per_page: 20,  // Reduced from 100 to 20 for development
+        process_all_pages: false,  // Changed from true to false for development
         fetch_discussions: true
       }),
       deadLetterQueue: dlq,
@@ -263,7 +263,7 @@ export class LkmlAssistantStack extends cdk.Stack {
     // 3. Schedule weekly discussion refresh to update any missing discussions
     const refreshDiscussionsWeeklyRule = new events.Rule(this, 'RefreshDiscussionsWeeklyRule', {
       ruleName: 'LkmlAssistant-RefreshDiscussionsWeekly',
-      schedule: events.Schedule.cron({ day: 'SUN', hour: '4', minute: '30' }),
+      schedule: events.Schedule.cron({ dayOfWeek: '0', hour: '4', minute: '30' }),
       description: 'Refresh all discussions weekly to catch any missed updates',
       enabled: true,
     });
@@ -294,8 +294,8 @@ export class LkmlAssistantStack extends cdk.Stack {
       event: events.RuleTargetInput.fromObject({
         source: 'scheduled.weekly',
         time: new Date().toISOString(),
-        days_to_look_back: 30,
-        limit: 200
+        days_to_look_back: 7,  // Reduced from 30 to 7 for development
+        limit: 20  // Reduced from 200 to 20 for development
       }),
       deadLetterQueue: dlq,
       maxEventAge: cdk.Duration.hours(12),

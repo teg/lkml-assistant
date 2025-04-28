@@ -177,7 +177,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
             # For demo purposes, we'll recursively invoke ourselves for the next page
             # Note: In production, this would be better handled by Step Functions
-            if page < 5:  # Limit to 5 pages for demo
+            if page < 2:  # Limit to 2 pages for development (previously 5)
                 try:
                     next_event = event.copy()
                     next_event["page"] = page + 1

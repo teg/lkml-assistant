@@ -1,0 +1,30 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:*",
+        "ecr:*",
+        "ssm:*",
+        "s3:*",
+        "iam:PassRole",
+        "iam:GetRole",
+        "iam:CreateRole",
+        "iam:TagRole",
+        "iam:AttachRolePolicy",
+        "iam:PutRolePolicy",
+        "iam:GetRolePolicy",
+        "iam:DeleteRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:ListPolicyVersions",
+        "iam:ListRolePolicies",
+        "iam:ListAttachedRolePolicies",
+        "iam:DeleteRole",
+        "iam:CreatePolicy",
+        "iam:DeletePolicy"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

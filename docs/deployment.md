@@ -234,6 +234,42 @@ Create a user with the following IAM policy that provides scoped access to manag
                 "arn:aws:cloudwatch::*:dashboard/LkmlAssistant-*",
                 "arn:aws:dynamodb:*:*:table/LkmlAssistant-*"
             ]
+        },
+        {
+            "Sid": "CDKBootstrapPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "cloudformation:DescribeStacks",
+                "cloudformation:CreateStack",
+                "cloudformation:UpdateStack",
+                "cloudformation:DeleteStack",
+                "cloudformation:CreateChangeSet",
+                "cloudformation:ExecuteChangeSet",
+                "cloudformation:DescribeChangeSet",
+                "cloudformation:DescribeStackEvents",
+                "cloudformation:GetTemplate",
+                "cloudformation:ListStackResources",
+                "cloudformation:DescribeStackResource",
+                "cloudformation:DescribeStackResources"
+            ],
+            "Resource": [
+                "arn:aws:cloudformation:*:*:stack/CDKToolkit/*"
+            ]
+        },
+        {
+            "Sid": "CDKECRPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "ecr:CreateRepository",
+                "ecr:DescribeRepositories",
+                "ecr:PutLifecyclePolicy",
+                "ecr:SetRepositoryPolicy",
+                "ecr:DeleteRepository",
+                "ecr:TagResource"
+            ],
+            "Resource": [
+                "arn:aws:ecr:*:*:repository/cdk-*"
+            ]
         }
     ]
 }
@@ -244,8 +280,10 @@ This policy provides:
 1. Limited read permissions on global AWS resources (first statement)
 2. Full permissions but only for resources with the "LkmlAssistant-" prefix (second statement)
 3. Full S3 access (needed for CloudFormation template deployment)
+4. Specific permissions for the CDK bootstrap stack (third statement)
+5. ECR permissions for CDK container assets (fourth statement)
 
-This policy achieves isolation by limiting full permissions only to the resources that belong to this application.
+This policy achieves isolation by limiting full permissions only to the resources that belong to this application, while allowing necessary operations on the CDK bootstrap infrastructure.
 
 ## Infrastructure as Code
 

@@ -16,8 +16,12 @@ def pytest_configure(config):
     """Configure PyTest for post-deployment tests."""
     # Add custom markers
     config.addinivalue_line("markers", "smoke: smoke tests for deployed resources")
-    config.addinivalue_line("markers", "integration: integration tests for deployed resources")
-    config.addinivalue_line("markers", "configuration: tests for resource configuration")
+    config.addinivalue_line(
+        "markers", "integration: integration tests for deployed resources"
+    )
+    config.addinivalue_line(
+        "markers", "configuration: tests for resource configuration"
+    )
 
 
 @pytest.fixture(scope="session")
@@ -44,27 +48,25 @@ def aws_profile():
 def verifier(environment, aws_region, aws_profile):
     """Create a deployment verifier for tests."""
     return DeploymentVerifier(
-        environment=environment,
-        region=aws_region,
-        profile=aws_profile
+        environment=environment, region=aws_region, profile=aws_profile
     )
 
 
 @pytest.fixture
 def lambda_function_name(environment):
     """Get the full Lambda function name for the environment."""
-    
+
     def _get_function_name(base_name):
         return f"LkmlAssistant-{base_name}-{environment}"
-    
+
     return _get_function_name
 
 
 @pytest.fixture
 def dynamodb_table_name(environment):
     """Get the full DynamoDB table name for the environment."""
-    
+
     def _get_table_name(base_name):
         return f"LkmlAssistant-{base_name}-{environment}"
-    
+
     return _get_table_name
